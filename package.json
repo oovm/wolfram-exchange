@@ -1,0 +1,13 @@
+{
+    "name": "notedown-workspace",
+    "private": true,
+    "scripts": {
+        "pre": "cargo test --color=always --no-run --package notedown-parser --lib pre_build && cargo fmt --all",
+        "build": "cargo build --release",
+        "test": "cargo build",
+        "fmt": "cargo fmt --all",
+        "push": "yarn test && git push",
+        "reset": "git reset Head~ --soft",
+        "pub": "cargo-publish-all --yes --allow-dirty"
+    }
+}
