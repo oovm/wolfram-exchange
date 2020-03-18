@@ -1,0 +1,24 @@
+use std::error::Error;
+use std::fmt::{self, Display, Formatter};
+
+#[derive(Clone, Debug)]
+pub enum WXFError {
+    Custom(Box<dyn Error>)
+}
+
+impl Display for WXFError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Error for WXFError {  }
+
+impl serde::ser::Error for WXFError {
+    fn custom<T>(msg: T) -> Self where
+        T: Display {
+        Self::Custom(Box::new(msg))
+    }
+}
+
+pub type Result<T> = std::result::Result<T, WXFError>;

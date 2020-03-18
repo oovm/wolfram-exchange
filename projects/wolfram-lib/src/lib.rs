@@ -25,9 +25,9 @@ pub enum WolframValue {
     Skip,
     /// Function with name, args
     Function(Box<WolframValue>, Vec<WolframValue>),
-    String(Box<str>),
+    String(String),
     Bytes(Vec<u8>),
-    Symbol(Box<str>),
+    Symbol(String),
     Integer8(i8),
     Integer16(i16),
     Integer32(i32),
@@ -35,7 +35,7 @@ pub enum WolframValue {
     BigInteger(BigInt),
     /// Do not use `f64`, because partial order cannot be defined
     Decimal64([u8; 8]),
-    BigDecimal(Box<str>),
+    BigDecimal(String),
     /// Need to optimize
     PackedArray(Vec<WolframValue>),
     /// Need to optimize

@@ -3,14 +3,15 @@ name = "serde_wxf"
 version = "0.0.1"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
-repository = "https://github.com/GalAster/wolfram-exchange"
+repository = "https://github.com/oovm/wolfram-exchange"
 readme = "../../README.md"
 license = "MPL-2.0"
 edition = "2018"
 
 
-[dependencies]
-serde  = "1.0"
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
 
 [dependencies.wolfram_wxf]
 version = "0.5"

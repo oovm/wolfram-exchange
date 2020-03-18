@@ -1,7 +1,7 @@
 use crate::{utils::SYSTEM_SYMBOLS, WolframValue};
 use flate2::{write::ZlibEncoder, Compression};
 use std::{collections::BTreeSet, io::Write, mem::transmute};
-use integer_encoding::{VarInt, FixedInt};
+use integer_encoding::{VarInt};
 
 impl WolframValue {
     pub fn to_string(&self) -> String {
@@ -30,7 +30,7 @@ impl WolframValue {
             WolframValue::Function(head, args) => {
                 let mut out = Vec::new();
                 out.push(b'f');
-                out.extend_from_slice(&args.len().encode_fixed_vec());
+                out.extend_from_slice(&args.len().encode_var_vec());
                 out.extend_from_slice(&head.to_bytes_inner());
                 for v in args {
                     out.extend_from_slice(&v.to_bytes_inner())

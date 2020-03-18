@@ -25,7 +25,7 @@ impl ToWolfram for String {
 
 impl ToWolfram for &str {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::String(Box::from(*self))
+        WolframValue::String(self.to_string())
     }
 }
 

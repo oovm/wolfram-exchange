@@ -10,8 +10,8 @@ use num::BigInt;
 pub use systems::SYSTEM_SYMBOLS;
 
 impl WolframValue {
-    pub fn symbol(s: impl AsRef<str>) -> WolframValue {
-        WolframValue::Symbol(Box::from(s.as_ref()))
+    pub fn symbol(s: impl Into<String>) -> WolframValue {
+        WolframValue::Symbol(s.into())
     }
     pub fn integer(i: impl Into<BigInt>) -> WolframValue {
         WolframValue::BigInteger(i.into())
