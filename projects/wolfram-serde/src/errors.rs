@@ -1,9 +1,9 @@
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum WXFError {
-    Custom(Box<dyn Error>)
+    Custom(String)
 }
 
 impl Display for WXFError {
@@ -17,7 +17,7 @@ impl Error for WXFError {  }
 impl serde::ser::Error for WXFError {
     fn custom<T>(msg: T) -> Self where
         T: Display {
-        Self::Custom(Box::new(msg))
+        Self::Custom(msg.to_string())
     }
 }
 

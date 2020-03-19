@@ -1,10 +1,24 @@
 use serde::{ser, Serialize};
+use wolfram_wxf::{WolframValue, ToWolfram};
 
 use crate::{WXFError as Error, Result};
+use std::collections::BTreeMap;
 
 pub struct Serializer {
     // This string starts empty and JSON is appended as values are serialized.
-    output: String,
+    buffer: Vec<u8>,
+    inner: WolframValue,
+    dict_buffer: BTreeMap<WolframValue, WolframValue>
+}
+
+impl Default for Serializer {
+    fn default() -> Self {
+        Self {
+            buffer: vec![],
+            inner: WolframValue::Skip,
+            dict_buffer: Default::default()
+        }
+    }
 }
 
 // By convention, the public API of a Serde serializer is one or more `to_abc`
@@ -16,11 +30,9 @@ pub fn to_string<T>(value: &T) -> Result<String>
     where
         T: Serialize,
 {
-    let mut serializer = Serializer {
-        output: String::new(),
-    };
+    let mut serializer = Serializer::default();
     value.serialize(&mut serializer)?;
-    Ok(serializer.output)
+    Ok(serializer.inner.to_string())
 }
 
 impl<'a> ser::Serializer for &'a mut Serializer {
@@ -47,113 +59,85 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     type SerializeStruct = Self;
     type SerializeStructVariant = Self;
 
-    // Here we go with the simple methods. The following 12 methods receive one
-    // of the primitive types of the data model and map it to JSON by appending
-    // into the output string.
     fn serialize_bool(self, v: bool) -> Result<()> {
-        self.output += if v { "true" } else { "false" };
-        Ok(())
+        Ok(self.inner = v.to_wolfram())
     }
 
-    // JSON does not distinguish between different sizes of integers, so all
-    // signed integers will be serialized the same and all unsigned integers
-    // will be serialized the same. Other formats, especially compact binary
-    // formats, may need independent logic for the different sizes.
     fn serialize_i8(self, v: i8) -> Result<()> {
-        self.serialize_i64(i64::from(v))
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
     fn serialize_i16(self, v: i16) -> Result<()> {
-        self.serialize_i64(i64::from(v))
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
     fn serialize_i32(self, v: i32) -> Result<()> {
-        self.serialize_i64(i64::from(v))
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
-    // Not particularly efficient but this is example code anyway. A more
-    // performant approach would be to use the `itoa` crate.
     fn serialize_i64(self, v: i64) -> Result<()> {
-        self.output += &v.to_string();
-        Ok(())
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
     fn serialize_u8(self, v: u8) -> Result<()> {
-        self.serialize_u64(u64::from(v))
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
     fn serialize_u16(self, v: u16) -> Result<()> {
-        self.serialize_u64(u64::from(v))
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
     fn serialize_u32(self, v: u32) -> Result<()> {
-        self.serialize_u64(u64::from(v))
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
     fn serialize_u64(self, v: u64) -> Result<()> {
-        self.output += &v.to_string();
-        Ok(())
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
     fn serialize_f32(self, v: f32) -> Result<()> {
-        self.serialize_f64(f64::from(v))
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
     fn serialize_f64(self, v: f64) -> Result<()> {
-        self.output += &v.to_string();
-        Ok(())
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
-    // Serialize a char as a single-character string. Other formats may
-    // represent this differently.
     fn serialize_char(self, v: char) -> Result<()> {
-        self.serialize_str(&v.to_string())
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
-    // This only works for strings that don't require escape sequences but you
-    // get the idea. For example it would emit invalid JSON if the input string
-    // contains a '"' character.
     fn serialize_str(self, v: &str) -> Result<()> {
-        self.output += "\"";
-        self.output += v;
-        self.output += "\"";
-        Ok(())
+        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
     }
 
     // Serialize a byte array as an array of bytes. Could also use a base64
     // string here. Binary formats will typically represent byte arrays more
     // compactly.
     fn serialize_bytes(self, v: &[u8]) -> Result<()> {
-        use serde::ser::SerializeSeq;
-        let mut seq = self.serialize_seq(Some(v.len()))?;
-        for byte in v {
-            seq.serialize_element(byte)?;
-        }
-        seq.end()
+        //Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        unimplemented!()
     }
 
-    // An absent optional is represented as the JSON `null`.
+    // todo
     fn serialize_none(self) -> Result<()> {
-        self.serialize_unit()
+        //self.serialize_unit()
+        unimplemented!()
     }
 
-    // A present optional is represented as just the contained value. Note that
-    // this is a lossy representation. For example the values `Some(())` and
-    // `None` both serialize as just `null`. Unfortunately this is typically
-    // what people expect when working with JSON. Other formats are encouraged
-    // to behave more intelligently if possible.
     fn serialize_some<T>(self, value: &T) -> Result<()>
         where
             T: ?Sized + Serialize,
     {
-        value.serialize(self)
+        unimplemented!()
+        //value.serialize(self)
     }
 
     // In Serde, unit means an anonymous value containing no data. Map this to
     // JSON as `null`.
     fn serialize_unit(self) -> Result<()> {
-        self.output += "null";
-        Ok(())
+        //self.inner += "null";
+        unimplemented!();
     }
 
     // Unit struct means a named value containing no data. Again, since there is
@@ -204,12 +188,12 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        self.output += "{";
-        variant.serialize(&mut *self)?;
-        self.output += ":";
-        value.serialize(&mut *self)?;
-        self.output += "}";
-        Ok(())
+        // self.inner += "{";
+        // variant.serialize(&mut *self)?;
+        // self.inner += ":";
+        // value.serialize(&mut *self)?;
+        // self.inner += "}";
+        unimplemented!()
     }
 
     // Now we get to the serialization of compound types.
@@ -223,8 +207,9 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     // explicitly in the serialized form. Some serializers may only be able to
     // support sequences for which the length is known up front.
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq> {
-        self.output += "[";
-        Ok(self)
+        // self.inner += "[";
+        // Ok(self)
+        unimplemented!()
     }
 
     // Tuples look just like sequences in JSON. Some formats may be able to
@@ -253,15 +238,15 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleVariant> {
-        self.output += "{";
-        variant.serialize(&mut *self)?;
-        self.output += ":[";
-        Ok(self)
+        // self.inner += "{";
+        // variant.serialize(&mut *self)?;
+        // self.inner += ":[";
+        // Ok(self)
+        unimplemented!()
     }
 
     // Maps are represented in JSON as `{ K: V, K: V, ... }`.
-    fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap> {
-        self.output += "{";
+    fn serialize_map(self, _: Option<usize>) -> Result<Self::SerializeMap> {
         Ok(self)
     }
 
@@ -287,10 +272,11 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStructVariant> {
-        self.output += "{";
-        variant.serialize(&mut *self)?;
-        self.output += ":{";
-        Ok(self)
+        // self.inner += "{";
+        // variant.serialize(&mut *self)?;
+        // self.inner += ":{";
+        // Ok(self)
+        unimplemented!()
     }
 }
 
@@ -312,15 +298,15 @@ impl<'a> ser::SerializeSeq for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('[') {
-            self.output += ",";
-        }
-        value.serialize(&mut **self)
+        // if !self.inner.ends_with('[') {
+        //     self.inner += ",";
+        // }
+        // value.serialize(&mut **self)
+        unimplemented!()
     }
 
     // Close the sequence.
     fn end(self) -> Result<()> {
-        self.output += "]";
         Ok(())
     }
 }
@@ -334,14 +320,14 @@ impl<'a> ser::SerializeTuple for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('[') {
-            self.output += ",";
-        }
-        value.serialize(&mut **self)
+        // if !self.inner.ends_with('[') {
+        //     self.inner += ",";
+        // }
+        // value.serialize(&mut **self)
+        unimplemented!()
     }
 
     fn end(self) -> Result<()> {
-        self.output += "]";
         Ok(())
     }
 }
@@ -355,14 +341,14 @@ impl<'a> ser::SerializeTupleStruct for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('[') {
-            self.output += ",";
-        }
-        value.serialize(&mut **self)
+        // if !self.inner.ends_with('[') {
+        //     self.inner += ",";
+        // }
+        // value.serialize(&mut **self)
+        unimplemented!()
     }
 
     fn end(self) -> Result<()> {
-        self.output += "]";
         Ok(())
     }
 }
@@ -384,14 +370,14 @@ impl<'a> ser::SerializeTupleVariant for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('[') {
-            self.output += ",";
-        }
-        value.serialize(&mut **self)
+        // if !self.inner.ends_with('[') {
+        //     self.inner += ",";
+        // }
+        // value.serialize(&mut **self)
+        unimplemented!()
     }
 
     fn end(self) -> Result<()> {
-        self.output += "]}";
         Ok(())
     }
 }
@@ -420,10 +406,11 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('{') {
-            self.output += ",";
-        }
-        key.serialize(&mut **self)
+        // if !self.inner.ends_with('{') {
+        //     self.inner += ",";
+        // }
+        // key.serialize(&mut **self)
+        unimplemented!()
     }
 
     // It doesn't make a difference whether the colon is printed at the end of
@@ -433,18 +420,19 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        self.output += ":";
-        value.serialize(&mut **self)
+        // self.inner += ":";
+        // value.serialize(&mut **self)
+        unimplemented!()
     }
 
     fn end(self) -> Result<()> {
-        self.output += "}";
         Ok(())
     }
 }
 
 // Structs are like maps in which the keys are constrained to be compile-time
 // constant strings.
+// Name[a -> b, c -> d]
 impl<'a> ser::SerializeStruct for &'a mut Serializer {
     type Ok = ();
     type Error = Error;
@@ -453,16 +441,11 @@ impl<'a> ser::SerializeStruct for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('{') {
-            self.output += ",";
-        }
-        key.serialize(&mut **self)?;
-        self.output += ":";
-        value.serialize(&mut **self)
+        self.dict_buffer.insert(key.to_wolfram(), value.to_wolfram());
+        Ok(())
     }
 
     fn end(self) -> Result<()> {
-        self.output += "}";
         Ok(())
     }
 }
@@ -477,16 +460,16 @@ impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('{') {
-            self.output += ",";
-        }
-        key.serialize(&mut **self)?;
-        self.output += ":";
-        value.serialize(&mut **self)
+        // if !self.inner.ends_with('{') {
+        //     self.inner += ",";
+        // }
+        // key.serialize(&mut **self)?;
+        // self.inner += ":";
+        // value.serialize(&mut **self)
+        unimplemented!()
     }
 
     fn end(self) -> Result<()> {
-        self.output += "}}";
         Ok(())
     }
 }
