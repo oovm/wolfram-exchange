@@ -1,41 +1,35 @@
-use serde::{ser, Serialize};
+use serde::{ser, Serialize, Serializer};
 use wolfram_wxf::{WolframValue, ToWolfram};
 
 use crate::{WXFError as Error, Result};
 use std::collections::BTreeMap;
 
-pub struct Serializer {
-    // This string starts empty and JSON is appended as values are serialized.
-    buffer: Vec<u8>,
-    inner: WolframValue,
-    dict_buffer: BTreeMap<WolframValue, WolframValue>
+pub fn serialize(v: impl Serialize) -> Result<String> {
+    let mut serializer = WXFSerializer::default();
+    v.serialize(&mut serializer)?;
+    Ok(serializer.this.to_string())
 }
 
-impl Default for Serializer {
+
+pub struct WXFSerializer {
+    buffer: Vec<u8>,
+    this: WolframValue,
+    list_buffer: Vec<WolframValue>,
+    dict_buffer: BTreeMap<WolframValue, WolframValue>,
+}
+
+impl Default for WXFSerializer {
     fn default() -> Self {
         Self {
             buffer: vec![],
-            inner: WolframValue::Skip,
+            this: WolframValue::Skip,
+            list_buffer: vec![],
             dict_buffer: Default::default()
         }
     }
 }
 
-// By convention, the public API of a Serde serializer is one or more `to_abc`
-// functions such as `to_string`, `to_bytes`, or `to_writer` depending on what
-// Rust types the serializer is able to produce as output.
-//
-// This basic serializer supports only `to_string`.
-pub fn to_string<T>(value: &T) -> Result<String>
-    where
-        T: Serialize,
-{
-    let mut serializer = Serializer::default();
-    value.serialize(&mut serializer)?;
-    Ok(serializer.inner.to_string())
-}
-
-impl<'a> ser::Serializer for &'a mut Serializer {
+impl<'a> Serializer for &'a mut WXFSerializer {
     // The output type produced by this `Serializer` during successful
     // serialization. Most serializers that produce text or binary output should
     // set `Ok = ()` and serialize into an `io::Write` or buffer contained
@@ -60,55 +54,55 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     type SerializeStructVariant = Self;
 
     fn serialize_bool(self, v: bool) -> Result<()> {
-        Ok(self.inner = v.to_wolfram())
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_i8(self, v: i8) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_i16(self, v: i16) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_i32(self, v: i32) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_i64(self, v: i64) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_u8(self, v: u8) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_u16(self, v: u16) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_u32(self, v: u32) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_u64(self, v: u64) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_f32(self, v: f32) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_f64(self, v: f64) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_char(self, v: char) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     fn serialize_str(self, v: &str) -> Result<()> {
-        Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+        Ok(self.this = v.to_wolfram())
     }
 
     // Serialize a byte array as an array of bytes. Could also use a base64
@@ -207,9 +201,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     // explicitly in the serialized form. Some serializers may only be able to
     // support sequences for which the length is known up front.
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq> {
-        // self.inner += "[";
-        // Ok(self)
-        unimplemented!()
+        Ok(self)
     }
 
     // Tuples look just like sequences in JSON. Some formats may be able to
@@ -287,7 +279,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
 //
 // This impl is SerializeSeq so these methods are called after `serialize_seq`
 // is called on the Serializer.
-impl<'a> ser::SerializeSeq for &'a mut Serializer {
+impl<'a> ser::SerializeSeq for &'a mut WXFSerializer {
     // Must match the `Ok` type of the serializer.
     type Ok = ();
     // Must match the `Error` type of the serializer.
@@ -298,21 +290,21 @@ impl<'a> ser::SerializeSeq for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        // if !self.inner.ends_with('[') {
-        //     self.inner += ",";
-        // }
-        // value.serialize(&mut **self)
-        unimplemented!()
+        value.serialize(&mut **self);
+        self.list_buffer.push(self.this.to_wolfram());
+        Ok(())
     }
 
     // Close the sequence.
     fn end(self) -> Result<()> {
+        self.this = self.list_buffer.to_wolfram();
+        self.list_buffer.clear();
         Ok(())
     }
 }
 
 // Same thing but for tuples.
-impl<'a> ser::SerializeTuple for &'a mut Serializer {
+impl<'a> ser::SerializeTuple for &'a mut WXFSerializer {
     type Ok = ();
     type Error = Error;
 
@@ -333,7 +325,7 @@ impl<'a> ser::SerializeTuple for &'a mut Serializer {
 }
 
 // Same thing but for tuple structs.
-impl<'a> ser::SerializeTupleStruct for &'a mut Serializer {
+impl<'a> ser::SerializeTupleStruct for &'a mut WXFSerializer {
     type Ok = ();
     type Error = Error;
 
@@ -362,7 +354,7 @@ impl<'a> ser::SerializeTupleStruct for &'a mut Serializer {
 //
 // So the `end` method in this impl is responsible for closing both the `]` and
 // the `}`.
-impl<'a> ser::SerializeTupleVariant for &'a mut Serializer {
+impl<'a> ser::SerializeTupleVariant for &'a mut WXFSerializer {
     type Ok = ();
     type Error = Error;
 
@@ -390,7 +382,7 @@ impl<'a> ser::SerializeTupleVariant for &'a mut Serializer {
 // `serialize_entry` method allows serializers to optimize for the case where
 // key and value are both available simultaneously. In JSON it doesn't make a
 // difference so the default behavior for `serialize_entry` is fine.
-impl<'a> ser::SerializeMap for &'a mut Serializer {
+impl<'a> ser::SerializeMap for &'a mut WXFSerializer {
     type Ok = ();
     type Error = Error;
 
@@ -433,7 +425,7 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
 // Structs are like maps in which the keys are constrained to be compile-time
 // constant strings.
 // Name[a -> b, c -> d]
-impl<'a> ser::SerializeStruct for &'a mut Serializer {
+impl<'a> ser::SerializeStruct for &'a mut WXFSerializer {
     type Ok = ();
     type Error = Error;
 
@@ -441,18 +433,21 @@ impl<'a> ser::SerializeStruct for &'a mut Serializer {
         where
             T: ?Sized + Serialize,
     {
-        self.dict_buffer.insert(key.to_wolfram(), value.to_wolfram());
+        value.serialize(&mut **self)?;
+        self.dict_buffer.insert(key.to_wolfram(), self.this.to_wolfram());
         Ok(())
     }
 
     fn end(self) -> Result<()> {
+        self.this = self.dict_buffer.to_wolfram();
+        self.dict_buffer.clear();
         Ok(())
     }
 }
 
 // Similar to `SerializeTupleVariant`, here the `end` method is responsible for
 // closing both of the curly braces opened by `serialize_struct_variant`.
-impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
+impl<'a> ser::SerializeStructVariant for &'a mut WXFSerializer {
     type Ok = ();
     type Error = Error;
 
@@ -472,49 +467,4 @@ impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
     fn end(self) -> Result<()> {
         Ok(())
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-#[test]
-fn test_struct() {
-    #[derive(Serialize)]
-    struct Test {
-        int: u32,
-        seq: Vec<&'static str>,
-    }
-
-    let test = Test {
-        int: 1,
-        seq: vec!["a", "b"],
-    };
-    let expected = r#"{"int":1,"seq":["a","b"]}"#;
-    assert_eq!(to_string(&test).unwrap(), expected);
-}
-
-#[test]
-fn test_enum() {
-    #[derive(Serialize)]
-    enum E {
-        Unit,
-        Newtype(u32),
-        Tuple(u32, u32),
-        Struct { a: u32 },
-    }
-
-    let u = E::Unit;
-    let expected = r#""Unit""#;
-    assert_eq!(to_string(&u).unwrap(), expected);
-
-    let n = E::Newtype(1);
-    let expected = r#"{"Newtype":1}"#;
-    assert_eq!(to_string(&n).unwrap(), expected);
-
-    let t = E::Tuple(1, 2);
-    let expected = r#"{"Tuple":[1,2]}"#;
-    assert_eq!(to_string(&t).unwrap(), expected);
-
-    let s = E::Struct { a: 1 };
-    let expected = r#"{"Struct":{"a":1}}"#;
-    assert_eq!(to_string(&s).unwrap(), expected);
 }
