@@ -60,3 +60,17 @@ fn test_unsigned() {
         r"8:I'170141183460469231731687303715884105728".as_bytes()
     );
 }
+
+#[test]
+fn test_decimal() {
+    //Must verify FullForm equivalence!!!
+    //Normal@BinarySerialize[0.0]
+    assert_eq!(0.0.to_wolfram_bytes(), [56, 58, 114, 0, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(0.0.to_wolfram_string(), "0`");
+    //Normal@BinarySerialize[0.3]
+    assert_eq!(0.3.to_wolfram_bytes(), [56, 58, 114, 51, 51, 51, 51, 51, 51, 211, 63]);
+    assert_eq!(0.3.to_wolfram_string(), "0.3`");
+    //Normal@BinarySerialize[0.1+0.2]
+    assert_eq!((0.1 + 0.2).to_wolfram_bytes(), [56, 58, 114, 52, 51, 51, 51, 51, 51, 211, 63]);
+    assert_eq!((0.1 + 0.2).to_wolfram_string(), "0.30000000000000004`");
+}

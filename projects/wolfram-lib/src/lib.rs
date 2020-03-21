@@ -55,13 +55,16 @@ impl Display for WolframValue {
                 }
             }
             WolframValue::String(s) => write!(f, "{:?}", s),
-            WolframValue::Bytes(_) => unimplemented!(),
+            WolframValue::Bytes(b) => {
+                let v: Vec<String> = b.iter().map(|s| format!("{}", s)).collect();
+                write!(f, "ByteArray[{{{}}}]", v.join(","))
+            }
             WolframValue::Symbol(s) => write!(f, "{}", s),
             WolframValue::Integer8(i) => write!(f, "{}", i),
             WolframValue::Integer16(i) => write!(f, "{}", i),
             WolframValue::Integer32(i) => write!(f, "{}", i),
             WolframValue::Integer64(i) => write!(f, "{}", i),
-            WolframValue::Decimal64(_) => unimplemented!(),
+            WolframValue::Decimal64(s) => write!(f, "{}`", s),
             WolframValue::BigInteger(i) => write!(f, "{}", i),
             WolframValue::BigDecimal(_) => unimplemented!(),
             WolframValue::PackedArray(_) => unimplemented!(),

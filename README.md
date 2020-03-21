@@ -1,5 +1,5 @@
 Wolfram Exchange Format with Rust
 =================================
 
-![](./projects/project-logo/logo.svg)
+![](https://github.com/GalAster/wolfram-exchange/blob/master/projects/project-logo/Logo.png?raw=true)
 
