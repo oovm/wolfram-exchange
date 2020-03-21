@@ -8,7 +8,7 @@ impl ToWolfram for Value {
             Value::Bool(o) => o.to_wolfram(),
             Value::Number(n) => n.to_wolfram(),
             Value::String(s) => s.to_wolfram(),
-            Value::Array(_) => unimplemented!(),
+            Value::Array(a) => a.to_wolfram(),
             Value::Object(_) => unimplemented!(),
         }
     }

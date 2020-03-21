@@ -18,4 +18,7 @@ impl WolframValue {
     {
         WolframValue::BigInteger(BigInt::from(i))
     }
+    pub fn new_list(v: Vec<WolframValue>) -> WolframValue {
+        WolframValue::Function(Box::from(WolframValue::new_symbol("List")), v)
+    }
 }

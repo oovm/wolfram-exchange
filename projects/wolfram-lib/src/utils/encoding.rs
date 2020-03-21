@@ -4,7 +4,16 @@ use std::{collections::BTreeSet, mem::transmute};
 impl WolframValue {
     pub fn to_string(&self) -> String {
         match self {
-            WolframValue::Function => unimplemented!(),
+            WolframValue::Function(name, args) => {
+                let v: Vec<String> = args.iter().map(|v| v.to_string()).collect();
+
+                if name.to_string() == "List" {
+                    format!("{{{}}}", v.join(","))
+                }
+                else {
+                    format!("{}[{}]", name.to_string(), v.join(","))
+                }
+            }
             WolframValue::String(s) => format!("{:?}", s),
             WolframValue::Bytes => unimplemented!(),
             WolframValue::Symbol(s) => format!("{}", s),
@@ -26,9 +35,7 @@ impl WolframValue {
         let mut out = Vec::new();
         out.push(b'8');
         out.push(b':');
-        for c in self.to_bytes_inner() {
-            out.push(c)
-        }
+        out.extend_from_slice(&self.to_bytes_inner());
         return out;
     }
     pub fn to_compressed(&self) -> Vec<u8> {
@@ -37,11 +44,20 @@ impl WolframValue {
 
     fn to_bytes_inner(&self) -> Vec<u8> {
         match self {
-            WolframValue::Function => unimplemented!(),
+            WolframValue::Function(name, args) => {
+                let mut out = Vec::new();
+                out.push(b'f');
+                out.extend_from_slice(&length_encoding(args.len()));
+                out.extend_from_slice(&name.to_bytes_inner());
+                for v in args {
+                    out.extend_from_slice(&v.to_bytes_inner())
+                }
+                return out;
+            }
             WolframValue::String(s) => {
                 let mut out = Vec::with_capacity(2 * s.len());
                 out.push(b'S');
-                for c in length_encoding(&s) {
+                for c in length_encoding(s.len()) {
                     out.push(c)
                 }
                 for c in s.as_bytes() {
@@ -54,7 +70,7 @@ impl WolframValue {
                 let symbol = standardized_symbol_name(s);
                 let mut out = Vec::with_capacity(2 * s.len());
                 out.push(b's');
-                for c in length_encoding(&symbol) {
+                for c in length_encoding(symbol.len()) {
                     out.push(c)
                 }
                 for c in symbol.as_bytes() {
@@ -103,7 +119,7 @@ impl WolframValue {
                 let mut v = Vec::new();
                 v.push(b'I');
                 let n = i.to_str_radix(10);
-                for c in length_encoding(&n) {
+                for c in length_encoding(n.len()) {
                     v.push(c)
                 }
                 for c in n.as_bytes() {
@@ -140,8 +156,8 @@ fn standardized_symbol_name(input: &str) -> String {
 /// varint = ReplacePart[grouped8, {i_, 1} /; i < Length[grouped8] :> 1]
 /// Map[FromDigits[#, 2] &, varint]
 ///```
-fn length_encoding(input: &str) -> Vec<u8> {
-    let len = input.len();
+fn length_encoding(len: usize) -> Vec<u8> {
+    //TODO: use &[u8]
     if len <= 127 {
         return [len as u8].to_vec();
     }

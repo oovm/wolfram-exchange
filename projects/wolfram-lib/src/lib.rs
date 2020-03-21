@@ -15,9 +15,10 @@ pub trait ToWolfram {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum WolframValue {
-    Function,
-    String(String),
+    Function(Box<WolframValue>, Vec<WolframValue>),
+    String(Box<str>),
     Bytes,
     Symbol(Box<str>),
     Integer8(i8),

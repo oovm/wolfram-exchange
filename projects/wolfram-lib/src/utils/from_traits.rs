@@ -1,4 +1,5 @@
 use crate::{ToWolfram, WolframValue};
+use std::collections::{HashSet, LinkedList, VecDeque};
 
 impl ToWolfram for bool {
     fn to_wolfram(&self) -> WolframValue {
@@ -8,13 +9,13 @@ impl ToWolfram for bool {
 
 impl ToWolfram for String {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::String(self.clone())
+        self.as_str().to_wolfram()
     }
 }
 
 impl ToWolfram for &str {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::String(self.to_string())
+        WolframValue::String(Box::from(*self))
     }
 }
 
@@ -99,5 +100,33 @@ impl ToWolfram for f32 {
 impl ToWolfram for f64 {
     fn to_wolfram(&self) -> WolframValue {
         WolframValue::Decimal64(*self)
+    }
+}
+
+impl<T: ToWolfram> ToWolfram for Vec<T> {
+    fn to_wolfram(&self) -> WolframValue {
+        let v: Vec<WolframValue> = self.iter().map(|s| s.to_wolfram()).collect();
+        WolframValue::new_list(v)
+    }
+}
+
+impl<T: ToWolfram> ToWolfram for VecDeque<T> {
+    fn to_wolfram(&self) -> WolframValue {
+        let v: Vec<WolframValue> = self.iter().map(|s| s.to_wolfram()).collect();
+        WolframValue::new_list(v)
+    }
+}
+
+impl<T: ToWolfram> ToWolfram for LinkedList<T> {
+    fn to_wolfram(&self) -> WolframValue {
+        let v: Vec<WolframValue> = self.iter().map(|s| s.to_wolfram()).collect();
+        WolframValue::new_list(v)
+    }
+}
+
+impl<T: ToWolfram> ToWolfram for HashSet<T> {
+    fn to_wolfram(&self) -> WolframValue {
+        let v: Vec<WolframValue> = self.iter().map(|s| s.to_wolfram()).collect();
+        WolframValue::new_list(v)
     }
 }
