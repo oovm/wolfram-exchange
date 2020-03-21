@@ -1,4 +1,4 @@
-use wolfram_rs::{ToWolfram, WolframValue};
+use wolfram_wxf::{ToWolfram, WolframValue};
 
 #[test]
 fn test_integer() {

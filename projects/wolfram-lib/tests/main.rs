@@ -1,7 +1,6 @@
+mod containers;
 mod numbers;
-
-use std::collections::{BTreeMap, HashMap};
-use wolfram_rs::{ToWolfram, WolframValue};
+use wolfram_wxf::{ToWolfram, WolframValue};
 
 #[test]
 fn test_none() {
@@ -29,4 +28,3 @@ fn test_string() {
     assert_eq!("中文".to_wolfram_bytes(), [56, 58, 83, 6, 228, 184, 173, 230, 150, 135]);
     assert_eq!("中文".to_wolfram_string(), "\"中文\"");
 }
-

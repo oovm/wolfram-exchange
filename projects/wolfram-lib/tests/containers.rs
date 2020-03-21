@@ -1,5 +1,5 @@
-use wolfram_rs::ToWolfram;
 use std::collections::{BTreeMap, HashMap};
+use wolfram_wxf::ToWolfram;
 
 #[test]
 fn test_list() {

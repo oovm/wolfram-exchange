@@ -1,5 +1,6 @@
 use crate::{ToWolfram, WolframValue};
 use serde_json::{Number, Value};
+use std::collections::BTreeMap;
 
 impl ToWolfram for Value {
     fn to_wolfram(&self) -> WolframValue {
@@ -9,7 +10,14 @@ impl ToWolfram for Value {
             Value::Number(n) => n.to_wolfram(),
             Value::String(s) => s.to_wolfram(),
             Value::Array(a) => a.to_wolfram(),
-            Value::Object(_) => unimplemented!(),
+            Value::Object(o) => {
+                let ref rule = WolframValue::Rule;
+                let mut map = BTreeMap::new();
+                for (k, v) in o {
+                    map.insert(k.to_wolfram(), (rule.clone(), v.to_wolfram()));
+                }
+                WolframValue::Association(map)
+            }
         }
     }
 }

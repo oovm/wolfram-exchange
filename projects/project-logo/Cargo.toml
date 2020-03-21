@@ -1,11 +1,11 @@
 [package]
-name = "wolfram-cli"
+name = "wolfram-logo"
 publish=false
 version = "0.0.0"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
 repository = "https://github.com/GalAster/wolfram-exchange"
-readme = "../../README.md"
+readme = "README.md"
 license = "MPL-2.0"
 edition = "2018"
 
