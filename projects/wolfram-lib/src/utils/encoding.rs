@@ -1,9 +1,5 @@
-use crate::{utils::SYSTEM_SYMBOLS, ToWolfram, WolframValue};
-use std::{
-    collections::BTreeSet,
-    mem::{size_of, transmute},
-    ops::Deref,
-};
+use crate::{utils::SYSTEM_SYMBOLS, WolframValue};
+use std::{collections::BTreeSet, mem::transmute};
 
 impl WolframValue {
     pub fn to_string(&self) -> String {
@@ -103,10 +99,11 @@ impl WolframValue {
                 return v;
             }
             WolframValue::Decimal64(_) => unimplemented!(),
-            WolframValue::BigInteger(n) => {
-                let mut v = Vec::with_capacity(2 * n.len());
+            WolframValue::BigInteger(i) => {
+                let mut v = Vec::new();
                 v.push(b'I');
-                for c in length_encoding(n) {
+                let n = i.to_str_radix(10);
+                for c in length_encoding(&n) {
                     v.push(c)
                 }
                 for c in n.as_bytes() {

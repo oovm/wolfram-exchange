@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use num_bigint::BigInt;
 
 mod utils;
 
@@ -25,7 +25,7 @@ pub enum WolframValue {
     Integer32(i32),
     Integer64(i64),
     Decimal64(f64),
-    BigInteger(String),
+    BigInteger(BigInt),
     BigDecimal(String),
     PackedArray,
     NumericArray(Vec<WolframValue>),

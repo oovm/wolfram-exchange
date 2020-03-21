@@ -44,7 +44,7 @@ impl ToWolfram for i64 {
 
 impl ToWolfram for i128 {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::BigInteger(format!("{}", self))
+        WolframValue::new_integer(*self)
     }
 }
 
@@ -68,25 +68,25 @@ impl ToWolfram for u32 {
 
 impl ToWolfram for u64 {
     fn to_wolfram(&self) -> WolframValue {
-        if *self <= 9223372036854775807 { (*self as i64).to_wolfram() } else { WolframValue::BigInteger(format!("{}", *self)) }
+        if *self <= 9223372036854775807 { (*self as i64).to_wolfram() } else { WolframValue::new_integer(*self) }
     }
 }
 
 impl ToWolfram for u128 {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::BigInteger(format!("{}", *self))
+        WolframValue::new_integer(*self)
     }
 }
 
 impl ToWolfram for isize {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::BigInteger(format!("{}", *self))
+        WolframValue::new_integer(*self as i64)
     }
 }
 
 impl ToWolfram for usize {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::BigInteger(format!("{}", *self))
+        WolframValue::new_integer(*self as u64)
     }
 }
 
