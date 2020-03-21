@@ -3,33 +3,7 @@ use std::{collections::BTreeSet, mem::transmute};
 
 impl WolframValue {
     pub fn to_string(&self) -> String {
-        match self {
-            WolframValue::Function(name, args) => {
-                let v: Vec<String> = args.iter().map(|v| v.to_string()).collect();
-
-                if name.to_string() == "List" {
-                    format!("{{{}}}", v.join(","))
-                }
-                else {
-                    format!("{}[{}]", name.to_string(), v.join(","))
-                }
-            }
-            WolframValue::String(s) => format!("{:?}", s),
-            WolframValue::Bytes => unimplemented!(),
-            WolframValue::Symbol(s) => format!("{}", s),
-            WolframValue::Integer8(n) => format!("{}", n),
-            WolframValue::Integer16(n) => format!("{}", n),
-            WolframValue::Integer32(n) => format!("{}", n),
-            WolframValue::Integer64(n) => format!("{}", n),
-            WolframValue::Decimal64(_) => unimplemented!(),
-            WolframValue::BigInteger(_) => unimplemented!(),
-            WolframValue::BigDecimal(_) => unimplemented!(),
-            WolframValue::PackedArray => unimplemented!(),
-            WolframValue::NumericArray(_) => unimplemented!(),
-            WolframValue::Association => unimplemented!(),
-            WolframValue::Rule => unimplemented!(),
-            WolframValue::RuleDelayed => unimplemented!(),
-        }
+        format!("{}", self)
     }
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut out = Vec::new();
@@ -65,7 +39,7 @@ impl WolframValue {
                 }
                 return out;
             }
-            WolframValue::Bytes => unimplemented!(),
+            WolframValue::Bytes(_) => unimplemented!(),
             WolframValue::Symbol(s) => {
                 let symbol = standardized_symbol_name(s);
                 let mut out = Vec::with_capacity(2 * s.len());
@@ -128,11 +102,21 @@ impl WolframValue {
                 return v;
             }
             WolframValue::BigDecimal(_) => unimplemented!(),
-            WolframValue::PackedArray => unimplemented!(),
+            WolframValue::PackedArray(_) => unimplemented!(),
             WolframValue::NumericArray(_) => unimplemented!(),
-            WolframValue::Association => unimplemented!(),
-            WolframValue::Rule => unimplemented!(),
-            WolframValue::RuleDelayed => unimplemented!(),
+            WolframValue::Association(dict) => {
+                let mut out = vec![];
+                out.push(b'A');
+                out.extend_from_slice(&length_encoding(dict.len()));
+                for (k, (r, v)) in dict {
+                    out.extend_from_slice(&r.to_bytes_inner());
+                    out.extend_from_slice(&k.to_bytes_inner());
+                    out.extend_from_slice(&v.to_bytes_inner());
+                }
+                return out;
+            }
+            WolframValue::Rule => vec![b'-'],
+            WolframValue::RuleDelayed => vec![b':'],
         }
     }
 }

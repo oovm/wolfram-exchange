@@ -1,5 +1,5 @@
 use crate::{ToWolfram, WolframValue};
-use std::collections::{HashSet, LinkedList, VecDeque};
+use std::collections::{BTreeMap, HashMap, HashSet, LinkedList, VecDeque};
 
 impl ToWolfram for bool {
     fn to_wolfram(&self) -> WolframValue {
@@ -93,40 +93,66 @@ impl ToWolfram for usize {
 
 impl ToWolfram for f32 {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::Decimal64(*self as f64)
+        WolframValue::Decimal64(format!("{}", self))
     }
 }
 
 impl ToWolfram for f64 {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::Decimal64(*self)
+        WolframValue::Decimal64(format!("{}", self))
     }
 }
 
 impl<T: ToWolfram> ToWolfram for Vec<T> {
     fn to_wolfram(&self) -> WolframValue {
-        let v: Vec<WolframValue> = self.iter().map(|s| s.to_wolfram()).collect();
-        WolframValue::new_list(v)
+        WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
     }
 }
 
 impl<T: ToWolfram> ToWolfram for VecDeque<T> {
     fn to_wolfram(&self) -> WolframValue {
-        let v: Vec<WolframValue> = self.iter().map(|s| s.to_wolfram()).collect();
-        WolframValue::new_list(v)
+        WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
     }
 }
 
 impl<T: ToWolfram> ToWolfram for LinkedList<T> {
     fn to_wolfram(&self) -> WolframValue {
-        let v: Vec<WolframValue> = self.iter().map(|s| s.to_wolfram()).collect();
-        WolframValue::new_list(v)
+        WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
     }
 }
 
 impl<T: ToWolfram> ToWolfram for HashSet<T> {
     fn to_wolfram(&self) -> WolframValue {
-        let v: Vec<WolframValue> = self.iter().map(|s| s.to_wolfram()).collect();
-        WolframValue::new_list(v)
+        WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
+    }
+}
+
+impl<K, V> ToWolfram for BTreeMap<K, V>
+where
+    K: ToWolfram,
+    V: ToWolfram,
+{
+    fn to_wolfram(&self) -> WolframValue {
+        let ref rule = WolframValue::Rule;
+        let mut map = BTreeMap::new();
+        for (k, v) in self {
+            map.insert(k.to_wolfram(), (rule.clone(), v.to_wolfram()));
+        }
+        WolframValue::Association(map)
+    }
+}
+
+impl<K, V> ToWolfram for HashMap<K, V>
+where
+    K: ToWolfram,
+    V: ToWolfram,
+{
+    fn to_wolfram(&self) -> WolframValue {
+        let ref rule = WolframValue::Rule;
+        let mut map = BTreeMap::new();
+        for (k, v) in self {
+            map.insert(k.to_wolfram(), (rule.clone(), v.to_wolfram()));
+        }
+        WolframValue::Association(map)
     }
 }

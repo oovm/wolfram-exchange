@@ -1,11 +1,15 @@
-use num_bigint::BigInt;
+use num::BigInt;
+use std::{
+    collections::BTreeMap,
+    fmt::{self, Display},
+};
 
 mod utils;
 
 pub trait ToWolfram {
     fn to_wolfram(&self) -> WolframValue;
     fn to_wolfram_string(&self) -> String {
-        self.to_wolfram().to_string()
+        format!("{}", self.to_wolfram())
     }
     fn to_wolfram_bytes(&self) -> Vec<u8> {
         self.to_wolfram().to_bytes()
@@ -15,22 +19,59 @@ pub trait ToWolfram {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub enum WolframValue {
+    /// name, args
     Function(Box<WolframValue>, Vec<WolframValue>),
     String(Box<str>),
-    Bytes,
+    Bytes(Vec<u8>),
     Symbol(Box<str>),
     Integer8(i8),
     Integer16(i16),
     Integer32(i32),
     Integer64(i64),
-    Decimal64(f64),
     BigInteger(BigInt),
+    /// notice that rust has no float ord
+    Decimal64(String),
     BigDecimal(String),
-    PackedArray,
+    PackedArray(Vec<WolframValue>),
     NumericArray(Vec<WolframValue>),
-    Association,
+    /// key, rule, value
+    Association(BTreeMap<WolframValue, (WolframValue, WolframValue)>),
     Rule,
     RuleDelayed,
+}
+
+impl Display for WolframValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            WolframValue::Function(name, args) => {
+                let v: Vec<String> = args.iter().map(|v| v.to_string()).collect();
+                if name.to_string() == "List" {
+                    write!(f, "{{{}}}", v.join(","))
+                }
+                else {
+                    write!(f, "{}[{}]", name.to_string(), v.join(","))
+                }
+            }
+            WolframValue::String(s) => write!(f, "{:?}", s),
+            WolframValue::Bytes(_) => unimplemented!(),
+            WolframValue::Symbol(s) => write!(f, "{}", s),
+            WolframValue::Integer8(i) => write!(f, "{}", i),
+            WolframValue::Integer16(i) => write!(f, "{}", i),
+            WolframValue::Integer32(i) => write!(f, "{}", i),
+            WolframValue::Integer64(i) => write!(f, "{}", i),
+            WolframValue::Decimal64(_) => unimplemented!(),
+            WolframValue::BigInteger(i) => write!(f, "{}", i),
+            WolframValue::BigDecimal(_) => unimplemented!(),
+            WolframValue::PackedArray(_) => unimplemented!(),
+            WolframValue::NumericArray(_) => unimplemented!(),
+            WolframValue::Association(dict) => {
+                let v: Vec<String> = dict.iter().map(|(k, (r, v))| format!("{}{}{}", k, r, v)).collect();
+                write!(f, "<|{}|>", v.join(","))
+            }
+            WolframValue::Rule => write!(f, "->"),
+            WolframValue::RuleDelayed => write!(f, ":>"),
+        }
+    }
 }

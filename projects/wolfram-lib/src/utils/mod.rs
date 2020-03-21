@@ -5,7 +5,7 @@ mod systems;
 
 use crate::WolframValue;
 
-use num_bigint::BigInt;
+use num::BigInt;
 pub use systems::SYSTEM_SYMBOLS;
 
 impl WolframValue {

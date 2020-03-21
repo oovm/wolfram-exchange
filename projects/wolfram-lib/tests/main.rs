@@ -1,5 +1,6 @@
 mod numbers;
 
+use std::collections::{BTreeMap, HashMap};
 use wolfram_rs::{ToWolfram, WolframValue};
 
 #[test]
@@ -29,12 +30,3 @@ fn test_string() {
     assert_eq!("中文".to_wolfram_string(), "\"中文\"");
 }
 
-#[test]
-fn test_list() {
-    //Normal@BinarySerialize[{0}]
-    assert_eq!(vec![0u8].to_wolfram_bytes(), [56, 58, 102, 1, 115, 4, 76, 105, 115, 116, 67, 0]);
-    assert_eq!(vec![0u8].to_wolfram_string(), "{0}");
-    //Normal@BinarySerialize[{"0"}]
-    assert_eq!(vec!["0"].to_wolfram_bytes(), [56, 58, 102, 1, 115, 4, 76, 105, 115, 116, 83, 1, 48]);
-    assert_eq!(vec!["0"].to_wolfram_string(), "{\"0\"}");
-}
