@@ -1,5 +1,9 @@
-use crate::{utils::SYSTEM_SYMBOLS, WolframValue};
-use std::{collections::BTreeSet, mem::size_of, ops::Deref};
+use crate::{utils::SYSTEM_SYMBOLS, ToWolfram, WolframValue};
+use std::{
+    collections::BTreeSet,
+    mem::{size_of, transmute},
+    ops::Deref,
+};
 
 impl WolframValue {
     pub fn to_string(&self) -> String {
@@ -8,10 +12,10 @@ impl WolframValue {
             WolframValue::String(s) => format!("{:?}", s),
             WolframValue::Bytes => unimplemented!(),
             WolframValue::Symbol(s) => format!("{}", s),
-            WolframValue::Integer8(_) => unimplemented!(),
-            WolframValue::Integer16(_) => unimplemented!(),
-            WolframValue::Integer32(_) => unimplemented!(),
-            WolframValue::Integer64(_) => unimplemented!(),
+            WolframValue::Integer8(n) => format!("{}", n),
+            WolframValue::Integer16(n) => format!("{}", n),
+            WolframValue::Integer32(n) => format!("{}", n),
+            WolframValue::Integer64(n) => format!("{}", n),
             WolframValue::Decimal64(_) => unimplemented!(),
             WolframValue::BigInteger(_) => unimplemented!(),
             WolframValue::BigDecimal(_) => unimplemented!(),
@@ -30,6 +34,9 @@ impl WolframValue {
             out.push(c)
         }
         return out;
+    }
+    pub fn to_compressed(&self) -> Vec<u8> {
+        unimplemented!()
     }
 
     fn to_bytes_inner(&self) -> Vec<u8> {
@@ -59,12 +66,54 @@ impl WolframValue {
                 }
                 return out;
             }
-            WolframValue::Integer8(_) => unimplemented!(),
-            WolframValue::Integer16(_) => unimplemented!(),
-            WolframValue::Integer32(_) => unimplemented!(),
-            WolframValue::Integer64(_) => unimplemented!(),
+            WolframValue::Integer8(n) => {
+                let mut v = Vec::with_capacity(2);
+                v.push(b'C');
+                let le: [u8; 1] = unsafe { transmute(n.to_le()) };
+                for c in le.iter() {
+                    v.push(*c)
+                }
+                return v;
+            }
+            WolframValue::Integer16(n) => {
+                let mut v = Vec::with_capacity(3);
+                v.push(b'j');
+                let le: [u8; 2] = unsafe { transmute(n.to_le()) };
+                for c in le.iter() {
+                    v.push(*c)
+                }
+                return v;
+            }
+            WolframValue::Integer32(n) => {
+                let mut v = Vec::with_capacity(5);
+                v.push(b'i');
+                let le: [u8; 4] = unsafe { transmute(n.to_le()) };
+                for c in le.iter() {
+                    v.push(*c)
+                }
+                return v;
+            }
+            WolframValue::Integer64(n) => {
+                let mut v = Vec::with_capacity(9);
+                v.push(b'L');
+                let le: [u8; 8] = unsafe { transmute(n.to_le()) };
+                for c in le.iter() {
+                    v.push(*c)
+                }
+                return v;
+            }
             WolframValue::Decimal64(_) => unimplemented!(),
-            WolframValue::BigInteger(_) => unimplemented!(),
+            WolframValue::BigInteger(n) => {
+                let mut v = Vec::with_capacity(2 * n.len());
+                v.push(b'I');
+                for c in length_encoding(n) {
+                    v.push(c)
+                }
+                for c in n.as_bytes() {
+                    v.push(*c)
+                }
+                return v;
+            }
             WolframValue::BigDecimal(_) => unimplemented!(),
             WolframValue::PackedArray => unimplemented!(),
             WolframValue::NumericArray(_) => unimplemented!(),
@@ -102,11 +151,4 @@ fn length_encoding(input: &str) -> Vec<u8> {
     else {
         unimplemented!()
     }
-}
-
-#[test]
-fn test() {
-    let o = WolframValue::Symbol(Box::from("None"));
-    let v = o.to_bytes();
-    println!("{:?}", v)
 }

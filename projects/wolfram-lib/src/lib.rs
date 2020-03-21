@@ -10,6 +10,9 @@ pub trait ToWolfram {
     fn to_wolfram_bytes(&self) -> Vec<u8> {
         self.to_wolfram().to_bytes()
     }
+    fn to_wolfram_compressed(&self) -> Vec<u8> {
+        self.to_wolfram().to_compressed()
+    }
 }
 
 pub enum WolframValue {

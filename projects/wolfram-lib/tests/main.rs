@@ -1,3 +1,5 @@
+mod numbers;
+
 use wolfram_rs::{ToWolfram, WolframValue};
 
 #[test]
