@@ -17,12 +17,12 @@ impl WolframValue {
         WolframValue::BigInteger(i.into())
     }
     pub fn new_function<T: ToWolfram>(name: &str, args: Vec<T>) -> WolframValue {
-        let f = Box::new(Self::new_symbol(name));
+        let f = Box::from(name);
         let v = args.iter().map(|t| t.to_wolfram()).collect();
         WolframValue::Function(f, v)
     }
     pub fn new_list(v: Vec<WolframValue>) -> WolframValue {
-        WolframValue::Function(Box::from(WolframValue::new_symbol("List")), v)
+        WolframValue::Function(Box::from("List"), v)
     }
     pub fn new_numeric_array() {
         unimplemented!()

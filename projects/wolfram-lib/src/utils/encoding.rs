@@ -14,15 +14,12 @@ impl WolframValue {
     }
     pub fn to_compressed(&self) -> Vec<u8> {
         let mut out = Vec::new();
-        let ref inner = self.to_bytes_inner();
         let mut e = ZlibEncoder::new(vec![], Compression::new(9));
-        if let Err(_) = e.write_all(inner) {
-            return vec![];
-        }
-        out.extend_from_slice(b"8C:");
-        match e.finish() {
-            Ok(o) => out.extend_from_slice(&o),
-            Err(_) => out.extend_from_slice(inner),
+        if let Ok(_) = e.write_all(&self.to_bytes_inner()) {
+            out.extend_from_slice(b"8C:")
+        };
+        if let Ok(o) = e.finish() {
+            out.extend_from_slice(&o)
         };
         return out;
     }
@@ -32,89 +29,72 @@ impl WolframValue {
                 let mut out = Vec::new();
                 out.push(b'f');
                 out.extend_from_slice(&length_encoding(args.len()));
-                out.extend_from_slice(&name.to_bytes_inner());
+                out.extend_from_slice(&WolframValue::new_symbol(name).to_bytes_inner());
                 for v in args {
                     out.extend_from_slice(&v.to_bytes_inner())
                 }
                 return out;
             }
             WolframValue::String(s) => {
-                let mut out = Vec::with_capacity(2 * s.len());
+                let ref len = length_encoding(s.len());
+                let mut out = Vec::with_capacity(1 + len.len() + s.len());
                 out.push(b'S');
-                for c in length_encoding(s.len()) {
-                    out.push(c)
-                }
-                for c in s.as_bytes() {
-                    out.push(*c)
-                }
+                out.extend_from_slice(len);
+                out.extend_from_slice(s.as_bytes());
                 return out;
             }
             WolframValue::Bytes(v) => {
-                let len = length_encoding(v.len());
+                let ref len = length_encoding(v.len());
                 let mut out = Vec::with_capacity(1 + len.len() + v.len());
                 out.push(b'B');
-                out.extend_from_slice(&len);
+                out.extend_from_slice(len);
                 out.extend_from_slice(&v);
                 return out;
             }
-            WolframValue::Symbol(s) => {
-                let symbol = standardized_symbol_name(s);
-                let mut out = Vec::with_capacity(2 * s.len());
+            WolframValue::Symbol(symbol) => {
+                let s = standardized_symbol_name(symbol);
+                let ref len = length_encoding(symbol.len());
+                let mut out = Vec::with_capacity(1 + len.len() + s.len());
                 out.push(b's');
-                for c in length_encoding(symbol.len()) {
-                    out.push(c)
-                }
-                for c in symbol.as_bytes() {
-                    out.push(*c)
-                }
+                out.extend_from_slice(len);
+                out.extend_from_slice(s.as_bytes());
                 return out;
             }
             WolframValue::Integer8(n) => {
+                let le: [u8; 1] = unsafe { transmute(n.to_le()) };
                 let mut v = Vec::with_capacity(2);
                 v.push(b'C');
-                let le: [u8; 1] = unsafe { transmute(n.to_le()) };
-                for c in le.iter() {
-                    v.push(*c)
-                }
+                v.extend_from_slice(le.as_ref());
                 return v;
             }
             WolframValue::Integer16(n) => {
+                let le: [u8; 2] = unsafe { transmute(n.to_le()) };
                 let mut v = Vec::with_capacity(3);
                 v.push(b'j');
-                let le: [u8; 2] = unsafe { transmute(n.to_le()) };
-                for c in le.iter() {
-                    v.push(*c)
-                }
+                v.extend_from_slice(le.as_ref());
                 return v;
             }
             WolframValue::Integer32(n) => {
+                let le: [u8; 4] = unsafe { transmute(n.to_le()) };
                 let mut v = Vec::with_capacity(5);
                 v.push(b'i');
-                let le: [u8; 4] = unsafe { transmute(n.to_le()) };
-                for c in le.iter() {
-                    v.push(*c)
-                }
+                v.extend_from_slice(le.as_ref());
                 return v;
             }
             WolframValue::Integer64(n) => {
+                let le: [u8; 8] = unsafe { transmute(n.to_le()) };
                 let mut v = Vec::with_capacity(9);
                 v.push(b'L');
-                let le: [u8; 8] = unsafe { transmute(n.to_le()) };
-                for c in le.iter() {
-                    v.push(*c)
-                }
+                v.extend_from_slice(le.as_ref());
                 return v;
             }
             WolframValue::BigInteger(i) => {
-                let mut v = Vec::new();
-                v.push(b'I');
                 let n = i.to_str_radix(10);
-                for c in length_encoding(n.len()) {
-                    v.push(c)
-                }
-                for c in n.as_bytes() {
-                    v.push(*c)
-                }
+                let ref len = length_encoding(n.len());
+                let mut v = Vec::with_capacity(1 + len.len() + n.len());
+                v.push(b'I');
+                v.extend_from_slice(len);
+                v.extend_from_slice(n.as_bytes());
                 return v;
             }
             WolframValue::Decimal64(s) => {
@@ -127,7 +107,7 @@ impl WolframValue {
             WolframValue::PackedArray(_) => unimplemented!(),
             WolframValue::NumericArray(_) => unimplemented!(),
             WolframValue::Association(dict) => {
-                let mut out = vec![];
+                let mut out = Vec::with_capacity(dict.len());
                 out.push(b'A');
                 out.extend_from_slice(&length_encoding(dict.len()));
                 for (k, (r, v)) in dict {

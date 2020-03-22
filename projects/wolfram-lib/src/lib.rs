@@ -23,8 +23,8 @@ pub trait ToWolfram {
 
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub enum WolframValue {
-    /// name, args
-    Function(Box<WolframValue>, Vec<WolframValue>),
+    /// Function with name, args
+    Function(Box<str>, Vec<WolframValue>),
     String(Box<str>),
     Bytes(Vec<u8>),
     Symbol(Box<str>),
@@ -33,12 +33,14 @@ pub enum WolframValue {
     Integer32(i32),
     Integer64(i64),
     BigInteger(BigInt),
-    /// notice that rust has no float ord
+    /// Do not use `f64`, because partial order cannot be defined
     Decimal64([u8; 8]),
-    BigDecimal(String),
+    BigDecimal(Box<str>),
+    /// Need to optimize
     PackedArray(Vec<WolframValue>),
+    /// Need to optimize
     NumericArray(Vec<WolframValue>),
-    /// key, rule, value
+    /// Record with key, rule, value
     Association(BTreeMap<WolframValue, (WolframValue, WolframValue)>),
     Rule,
     RuleDelayed,
@@ -66,9 +68,9 @@ impl Display for WolframValue {
             WolframValue::Integer16(i) => write!(f, "{}", i),
             WolframValue::Integer32(i) => write!(f, "{}", i),
             WolframValue::Integer64(i) => write!(f, "{}", i),
-            WolframValue::Decimal64(s) => write!(f, "{}`", f64::from_le_bytes(*s)),
             WolframValue::BigInteger(i) => write!(f, "{}", i),
-            WolframValue::BigDecimal(_) => unimplemented!(),
+            WolframValue::Decimal64(d) => write!(f, "{}`", f64::from_le_bytes(*d)),
+            WolframValue::BigDecimal(d) => write!(f, "{}", d),
             WolframValue::PackedArray(_) => unimplemented!(),
             WolframValue::NumericArray(_) => unimplemented!(),
             WolframValue::Association(dict) => {
