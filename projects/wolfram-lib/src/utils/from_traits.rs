@@ -1,5 +1,5 @@
 use crate::{ToWolfram, WolframValue};
-use num::{rational::Ratio, Complex};
+use num::{bigint::Sign, rational::Ratio, BigInt, BigUint, Complex};
 use std::{
     collections::{BTreeMap, HashMap, HashSet, LinkedList, VecDeque},
     intrinsics::transmute,
@@ -98,6 +98,18 @@ impl ToWolfram for isize {
 impl ToWolfram for usize {
     fn to_wolfram(&self) -> WolframValue {
         WolframValue::new_integer(*self as u64)
+    }
+}
+
+impl ToWolfram for BigUint {
+    fn to_wolfram(&self) -> WolframValue {
+        BigInt::from_biguint(Sign::NoSign, self.clone()).to_wolfram()
+    }
+}
+
+impl ToWolfram for BigInt {
+    fn to_wolfram(&self) -> WolframValue {
+        WolframValue::BigInteger(self.clone())
     }
 }
 

@@ -1,6 +1,5 @@
 mod encoding;
 mod from_traits;
-#[allow(unused_imports)]
 mod from_traits_extension;
 mod systems;
 
