@@ -32,7 +32,7 @@ pub enum WolframValue {
     Integer64(i64),
     BigInteger(BigInt),
     /// notice that rust has no float ord
-    Decimal64(String),
+    Decimal64([u8; 8]),
     BigDecimal(String),
     PackedArray(Vec<WolframValue>),
     NumericArray(Vec<WolframValue>),
@@ -64,7 +64,7 @@ impl Display for WolframValue {
             WolframValue::Integer16(i) => write!(f, "{}", i),
             WolframValue::Integer32(i) => write!(f, "{}", i),
             WolframValue::Integer64(i) => write!(f, "{}", i),
-            WolframValue::Decimal64(s) => write!(f, "{}`", s),
+            WolframValue::Decimal64(s) => write!(f, "{}`", f64::from_le_bytes(*s)),
             WolframValue::BigInteger(i) => write!(f, "{}", i),
             WolframValue::BigDecimal(_) => unimplemented!(),
             WolframValue::PackedArray(_) => unimplemented!(),

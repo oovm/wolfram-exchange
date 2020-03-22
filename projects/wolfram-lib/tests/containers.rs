@@ -28,7 +28,7 @@ fn test_dict() {
 #[test]
 fn test_bytes() {
     //Normal@BinarySerialize[ByteArray[{1, 2, 3}]]
-    let mut v = WolframValue::Bytes(vec![1, 2, 3]);
+    let v = WolframValue::Bytes(vec![1, 2, 3]);
     assert_eq!(v.to_bytes(), [56, 58, 66, 3, 1, 2, 3]);
     assert_eq!(v.to_string(), "ByteArray[{1,2,3}]");
 }

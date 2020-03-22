@@ -2,7 +2,7 @@
 
 members = ["projects/*"]
 default-members = [
-    "projects/wolfram-cli",
+    "projects/wolfram-serde",
     "projects/wolfram-lib",
 ]
 

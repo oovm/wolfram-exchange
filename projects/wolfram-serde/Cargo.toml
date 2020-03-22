@@ -1,6 +1,5 @@
 [package]
-name = "wolfram-cli"
-publish=false
+name = "serde_wxf"
 version = "0.0.0"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
@@ -11,7 +10,7 @@ edition = "2018"
 
 
 [dependencies]
-
+serde  = "1.0"
 
 
 

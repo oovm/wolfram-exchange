@@ -1,5 +1,9 @@
 use crate::{ToWolfram, WolframValue};
-use std::collections::{BTreeMap, HashMap, HashSet, LinkedList, VecDeque};
+use num::rational::Ratio;
+use std::{
+    collections::{BTreeMap, HashMap, HashSet, LinkedList, VecDeque},
+    intrinsics::transmute,
+};
 
 impl ToWolfram for bool {
     fn to_wolfram(&self) -> WolframValue {
@@ -16,6 +20,12 @@ impl ToWolfram for String {
 impl ToWolfram for &str {
     fn to_wolfram(&self) -> WolframValue {
         WolframValue::String(Box::from(*self))
+    }
+}
+
+impl ToWolfram for char {
+    fn to_wolfram(&self) -> WolframValue {
+        unsafe { std::str::from_utf8_unchecked(&[*self as u8]).to_wolfram() }
     }
 }
 
@@ -93,13 +103,20 @@ impl ToWolfram for usize {
 
 impl ToWolfram for f32 {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::Decimal64(format!("{}", self))
+        WolframValue::Decimal64(unsafe { transmute::<_, [u8; 8]>(*self as f64) })
     }
 }
 
 impl ToWolfram for f64 {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::Decimal64(format!("{}", self))
+        WolframValue::Decimal64(unsafe { transmute::<_, [u8; 8]>(*self) })
+    }
+}
+
+impl<T: ToWolfram + Clone> ToWolfram for Ratio<T> {
+    fn to_wolfram(&self) -> WolframValue {
+        let r: Vec<T> = vec![(*self.numer()).clone(), (*self.denom()).clone()];
+        WolframValue::new_function("Rational", r)
     }
 }
 

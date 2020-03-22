@@ -1,5 +1,4 @@
 use crate::{utils::SYSTEM_SYMBOLS, WolframValue};
-use serde_json::from_str;
 use std::{collections::BTreeSet, mem::transmute};
 
 impl WolframValue {
@@ -109,10 +108,9 @@ impl WolframValue {
                 return v;
             }
             WolframValue::Decimal64(s) => {
-                let f = from_str::<f64>(s).unwrap_or(0.0);
                 let mut v = Vec::with_capacity(9);
                 v.push(b'r');
-                v.extend_from_slice(unsafe { transmute::<_, [u8; 8]>(f).as_ref() });
+                v.extend_from_slice(s);
                 return v;
             }
             WolframValue::BigDecimal(_) => unimplemented!(),

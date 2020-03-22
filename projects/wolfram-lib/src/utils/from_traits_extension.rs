@@ -1,7 +1,10 @@
 use crate::{ToWolfram, WolframValue};
-use serde_json::{Number, Value};
 use std::collections::BTreeMap;
 
+#[cfg(feature = "json")]
+use serde_json::{Number, Value};
+
+#[cfg(feature = "json")]
 impl ToWolfram for Value {
     fn to_wolfram(&self) -> WolframValue {
         match self {
@@ -22,6 +25,7 @@ impl ToWolfram for Value {
     }
 }
 
+#[cfg(feature = "json")]
 impl ToWolfram for Number {
     fn to_wolfram(&self) -> WolframValue {
         if self.is_u64() {
