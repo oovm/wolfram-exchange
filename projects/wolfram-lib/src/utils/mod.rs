@@ -4,6 +4,7 @@ mod from_traits_extension;
 mod systems;
 
 use crate::{ToWolfram, WolframValue};
+pub use from_traits_extension::*;
 
 use num::BigInt;
 pub use systems::SYSTEM_SYMBOLS;

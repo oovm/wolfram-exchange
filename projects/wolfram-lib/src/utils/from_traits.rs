@@ -1,7 +1,7 @@
 use crate::{ToWolfram, WolframValue};
 use num::{bigint::Sign, rational::Ratio, BigInt, BigUint, Complex};
 use std::{
-    collections::{BTreeMap, HashMap, HashSet, LinkedList, VecDeque},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque},
     intrinsics::transmute,
 };
 
@@ -158,6 +158,12 @@ impl<T: ToWolfram> ToWolfram for LinkedList<T> {
 }
 
 impl<T: ToWolfram> ToWolfram for HashSet<T> {
+    fn to_wolfram(&self) -> WolframValue {
+        WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
+    }
+}
+
+impl<T: ToWolfram> ToWolfram for BTreeSet<T> {
     fn to_wolfram(&self) -> WolframValue {
         WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
     }

@@ -4,7 +4,7 @@ use std::{
     fmt::{self, Display},
 };
 
-mod utils;
+pub mod utils;
 
 pub trait ToWolfram {
     fn to_wolfram(&self) -> WolframValue;
@@ -51,12 +51,7 @@ impl Display for WolframValue {
         match self {
             WolframValue::Function(name, args) => {
                 let v: Vec<String> = args.iter().map(|v| v.to_string()).collect();
-                if name.to_string() == "List" {
-                    write!(f, "{{{}}}", v.join(","))
-                }
-                else {
-                    write!(f, "{}[{}]", name.to_string(), v.join(","))
-                }
+                if name.to_string() == "List" { write!(f, "{{{}}}", v.join(",")) } else { write!(f, "{}[{}]", name.to_string(), v.join(",")) }
             }
             WolframValue::String(s) => write!(f, "{:?}", s),
             WolframValue::Bytes(b) => {

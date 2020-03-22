@@ -2,7 +2,7 @@
     "name": "notedown-workspace",
     "private": true,
     "scripts": {
-        "pre": "cargo test --color=always --no-run --package notedown-parser --lib pre_build && cargo fmt --all",
+        "cli": "cargo run --color=always --package wxf-converter --bin wxf-converter -- -h",
         "build": "cargo build --release",
         "test": "cargo test --release",
         "fmt": "cargo fmt --all",

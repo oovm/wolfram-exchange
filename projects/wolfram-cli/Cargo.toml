@@ -10,11 +10,11 @@ edition = "2018"
 
 
 [dependencies]
-
+clap="2.27"
 
 [dependencies.wolfram_wxf]
 path = "../wolfram-lib"
 version = "0.2"
 default-features = false
-features = ["json", "pickle"]
+features = ["json", "pickle", "yaml"]
 
