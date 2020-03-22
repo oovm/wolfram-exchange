@@ -1,5 +1,6 @@
 use crate::{utils::SYSTEM_SYMBOLS, WolframValue};
-use std::{collections::BTreeSet, mem::transmute};
+use flate2::{write::ZlibEncoder, Compression};
+use std::{collections::BTreeSet, io::Write, mem::transmute};
 
 impl WolframValue {
     pub fn to_string(&self) -> String {
@@ -7,15 +8,24 @@ impl WolframValue {
     }
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut out = Vec::new();
-        out.push(b'8');
-        out.push(b':');
+        out.extend_from_slice(b"8:");
         out.extend_from_slice(&self.to_bytes_inner());
         return out;
     }
     pub fn to_compressed(&self) -> Vec<u8> {
-        unimplemented!()
+        let mut out = Vec::new();
+        let ref inner = self.to_bytes_inner();
+        let mut e = ZlibEncoder::new(vec![], Compression::new(9));
+        if let Err(_) = e.write_all(inner) {
+            return vec![];
+        }
+        out.extend_from_slice(b"8C:");
+        match e.finish() {
+            Ok(o) => out.extend_from_slice(&o),
+            Err(_) => out.extend_from_slice(inner),
+        };
+        return out;
     }
-
     fn to_bytes_inner(&self) -> Vec<u8> {
         match self {
             WolframValue::Function(name, args) => {

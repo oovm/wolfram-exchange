@@ -1,3 +1,4 @@
+mod compressed;
 mod containers;
 mod numbers;
 use wolfram_wxf::{ToWolfram, WolframValue};

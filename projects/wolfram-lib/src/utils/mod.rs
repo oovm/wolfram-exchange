@@ -13,21 +13,21 @@ impl WolframValue {
     pub fn new_symbol(s: &str) -> WolframValue {
         WolframValue::Symbol(Box::from(s))
     }
-    pub fn new_integer<T>(i: T) -> WolframValue
-    where
-        BigInt: From<T>,
-    {
-        WolframValue::BigInteger(BigInt::from(i))
+    pub fn new_integer<T: Into<BigInt>>(i: T) -> WolframValue {
+        WolframValue::BigInteger(i.into())
+    }
+    pub fn new_function<T: ToWolfram>(name: &str, args: Vec<T>) -> WolframValue {
+        let f = Box::new(Self::new_symbol(name));
+        let v = args.iter().map(|t| t.to_wolfram()).collect();
+        WolframValue::Function(f, v)
     }
     pub fn new_list(v: Vec<WolframValue>) -> WolframValue {
         WolframValue::Function(Box::from(WolframValue::new_symbol("List")), v)
     }
-    pub fn new_function<T>(name: &str, args: Vec<T>) -> WolframValue
-    where
-        T: ToWolfram,
-    {
-        let f = Box::new(Self::new_symbol(name));
-        let v = args.iter().map(|t| t.to_wolfram()).collect();
-        WolframValue::Function(f, v)
+    pub fn new_numeric_array() {
+        unimplemented!()
+    }
+    pub fn new_packed_array() {
+        unimplemented!()
     }
 }
