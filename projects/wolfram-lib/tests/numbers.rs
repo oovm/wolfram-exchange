@@ -1,3 +1,4 @@
+use num::{rational::Ratio, Complex};
 use wolfram_wxf::{ToWolfram, WolframValue};
 
 #[test]
@@ -73,4 +74,16 @@ fn test_decimal() {
     //Normal@BinarySerialize[0.1+0.2]
     assert_eq!((0.1 + 0.2).to_wolfram_bytes(), [56, 58, 114, 52, 51, 51, 51, 51, 51, 211, 63]);
     assert_eq!((0.1 + 0.2).to_wolfram_string(), "0.30000000000000004`");
+}
+
+#[test]
+fn test_other() {
+    //Normal@BinarySerialize[1/2]
+    let r = Ratio::new_raw(1u8, 2u8);
+    assert_eq!(r.to_wolfram_bytes(), [56, 58, 102, 2, 115, 8, 82, 97, 116, 105, 111, 110, 97, 108, 67, 1, 67, 2]);
+    assert_eq!(r.to_wolfram_string(), "Rational[1,2]");
+    //Normal@BinarySerialize[1+2I]
+    let r = Complex::new(1u8, 2u8);
+    assert_eq!(r.to_wolfram_bytes(), [56, 58, 102, 2, 115, 7, 67, 111, 109, 112, 108, 101, 120, 67, 1, 67, 2]);
+    assert_eq!(r.to_wolfram_string(), "Complex[1,2]");
 }

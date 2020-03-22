@@ -1,5 +1,5 @@
 use crate::{ToWolfram, WolframValue};
-use num::rational::Ratio;
+use num::{rational::Ratio, Complex};
 use std::{
     collections::{BTreeMap, HashMap, HashSet, LinkedList, VecDeque},
     intrinsics::transmute,
@@ -115,8 +115,15 @@ impl ToWolfram for f64 {
 
 impl<T: ToWolfram + Clone> ToWolfram for Ratio<T> {
     fn to_wolfram(&self) -> WolframValue {
-        let r: Vec<T> = vec![(*self.numer()).clone(), (*self.denom()).clone()];
+        let r = vec![(*self.numer()).clone(), (*self.denom()).clone()];
         WolframValue::new_function("Rational", r)
+    }
+}
+
+impl<T: ToWolfram + Copy> ToWolfram for Complex<T> {
+    fn to_wolfram(&self) -> WolframValue {
+        let r = vec![self.re, self.im];
+        WolframValue::new_function("Complex", r)
     }
 }
 
