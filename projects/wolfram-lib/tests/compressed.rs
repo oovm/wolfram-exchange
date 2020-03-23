@@ -4,7 +4,7 @@ use wolfram_wxf::ToWolfram;
 #[test]
 fn test_basic() {
     assert_eq!(0u8.to_wolfram_bytes(), [56, 58, 67, 0]);
-    assert_eq!(0u8.to_wolfram_solid(), [56, 58, 67, 0]);
+    assert_eq!(0u8.to_wolfram_solid(), [56, 67, 58, 120, 218, 115, 102, 0, 0, 0, 136, 0, 68]);
 
     let mut dict = HashMap::new();
     dict.insert(0, "zero");

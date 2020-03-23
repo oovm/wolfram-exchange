@@ -9,15 +9,13 @@ pub mod utils;
 pub trait ToWolfram {
     fn to_wolfram(&self) -> WolframValue;
     fn to_wolfram_string(&self) -> String {
-        format!("{}", self.to_wolfram())
+        self.to_wolfram().to_string()
     }
     fn to_wolfram_bytes(&self) -> Vec<u8> {
         self.to_wolfram().to_bytes()
     }
     fn to_wolfram_solid(&self) -> Vec<u8> {
-        let normal = self.to_wolfram().to_bytes();
-        let solid = self.to_wolfram().to_compressed();
-        if normal.len() > solid.len() { solid } else { normal }
+        self.to_wolfram().to_compressed()
     }
 }
 

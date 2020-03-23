@@ -1,5 +1,9 @@
+#[cfg(feature = "json")]
+pub use json::parse_json;
 #[cfg(feature = "yaml")]
 pub use yaml::parse_yaml;
+#[cfg(feature = "toml")]
+pub use toml::parse_toml;
 
 #[cfg(feature = "json")]
 mod json {
@@ -38,13 +42,48 @@ mod json {
             }
         }
     }
+    pub fn parse_json(input: &str) -> serde_json::Result<WolframValue> {
+        let v: Value = serde_json::from_str(data)?;
+        Ok(v.to_wolfram())
+    }
+}
+
+#[cfg(feature = "toml")]
+mod toml {
+    use crate::{ToWolfram, WolframValue};
+    use std::collections::BTreeMap;
+    use toml::Value;
+
+    impl ToWolfram for Value {
+        fn to_wolfram(&self) -> WolframValue {
+            match self {
+                Value::String(o) => o.to_wolfram(),
+                Value::Integer(o) => o.to_wolfram(),
+                Value::Float(o) => o.to_wolfram(),
+                Value::Boolean(o) => o.to_wolfram(),
+                Value::Datetime(o) => WolframValue::new_function("DateObject", vec![format!("{}", o)]),
+                Value::Array(o) => o.to_wolfram(),
+                Value::Table(o) => {
+                    let ref rule = WolframValue::Rule;
+                    let mut map = BTreeMap::new();
+                    for (k, v) in o {
+                        map.insert(k.to_wolfram(), (rule.clone(), v.to_wolfram()));
+                    }
+                    WolframValue::Association(map)
+                }
+            }
+        }
+    }
+    pub fn parse_toml(input: &str) -> Result<WolframValue, toml::de::Error> {
+        Ok(input.parse::<Value>()?.to_wolfram())
+    }
 }
 
 #[cfg(feature = "yaml")]
 mod yaml {
     use crate::{ToWolfram, WolframValue};
     use std::collections::BTreeMap;
-    use yaml_rust::{Yaml, YamlLoader};
+    use yaml_rust::{ScanError, Yaml, YamlLoader};
 
     impl ToWolfram for Yaml {
         fn to_wolfram(&self) -> WolframValue {
@@ -68,13 +107,14 @@ mod yaml {
             }
         }
     }
-    pub fn parse_yaml(input: &str) -> WolframValue {
-        let parsed = YamlLoader::load_from_str(input).unwrap_or(vec![]);
-        match parsed.len() {
+    pub fn parse_yaml(input: &str) -> Result<WolframValue, ScanError> {
+        let parsed = YamlLoader::load_from_str(input)?;
+        let v = match parsed.len() {
             0 => WolframValue::new_symbol("None"),
             1 => parsed[0].to_wolfram(),
             _ => parsed.to_wolfram(),
-        }
+        };
+        Ok(v)
     }
 }
 

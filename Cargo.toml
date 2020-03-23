@@ -4,6 +4,5 @@ members = ["projects/*"]
 default-members = [
     "projects/wolfram-serde",
     "projects/wolfram-lib",
-    "projects/wolfram-cli",
 ]
 
