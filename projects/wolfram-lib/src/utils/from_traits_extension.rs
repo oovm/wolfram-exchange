@@ -3,7 +3,7 @@ pub use json::parse_json;
 #[cfg(feature = "yaml")]
 pub use yaml::parse_yaml;
 #[cfg(feature = "toml")]
-pub use toml::parse_toml;
+pub use self::toml::parse_toml;
 
 #[cfg(feature = "json")]
 mod json {
@@ -43,7 +43,7 @@ mod json {
         }
     }
     pub fn parse_json(input: &str) -> serde_json::Result<WolframValue> {
-        let v: Value = serde_json::from_str(data)?;
+        let v: Value = serde_json::from_str(input)?;
         Ok(v.to_wolfram())
     }
 }
@@ -53,6 +53,7 @@ mod toml {
     use crate::{ToWolfram, WolframValue};
     use std::collections::BTreeMap;
     use toml::Value;
+    use crate::objects::date_object;
 
     impl ToWolfram for Value {
         fn to_wolfram(&self) -> WolframValue {
@@ -61,7 +62,7 @@ mod toml {
                 Value::Integer(o) => o.to_wolfram(),
                 Value::Float(o) => o.to_wolfram(),
                 Value::Boolean(o) => o.to_wolfram(),
-                Value::Datetime(o) => WolframValue::new_function("DateObject", vec![format!("{}", o)]),
+                Value::Datetime(o) => date_object(&format!("{}", o)),
                 Value::Array(o) => o.to_wolfram(),
                 Value::Table(o) => {
                     let ref rule = WolframValue::Rule;

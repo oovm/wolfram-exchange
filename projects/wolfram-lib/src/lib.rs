@@ -5,6 +5,7 @@ use std::{
 };
 
 pub mod utils;
+pub mod objects;
 
 pub trait ToWolfram {
     fn to_wolfram(&self) -> WolframValue;
