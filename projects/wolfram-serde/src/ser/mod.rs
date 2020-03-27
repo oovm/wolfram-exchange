@@ -1,29 +1,28 @@
+mod sequence;
+mod association;
+
 use serde::{ser, Serialize, Serializer};
 use wolfram_wxf::{WolframValue, ToWolfram};
 
 use crate::{WXFError as Error, Result};
 use std::collections::BTreeMap;
+pub use self::sequence::SequenceBuffer;
 
-pub fn serialize(v: impl Serialize) -> Result<String> {
-    let mut serializer = WXFSerializer::default();
-    v.serialize(&mut serializer)?;
-    Ok(serializer.this.to_string())
+impl ToWolfram for WXFSerializer {
+    fn to_wolfram(&self) -> WolframValue {
+        self.this.to_owned()
+    }
 }
 
-
 pub struct WXFSerializer {
-    buffer: Vec<u8>,
     this: WolframValue,
-    list_buffer: Vec<WolframValue>,
     dict_buffer: BTreeMap<WolframValue, WolframValue>,
 }
 
 impl Default for WXFSerializer {
     fn default() -> Self {
         Self {
-            buffer: vec![],
             this: WolframValue::Skip,
-            list_buffer: vec![],
             dict_buffer: Default::default()
         }
     }
@@ -45,10 +44,10 @@ impl<'a> Serializer for &'a mut WXFSerializer {
     // compound data structures like sequences and maps. In this case no
     // additional state is required beyond what is already stored in the
     // Serializer struct.
-    type SerializeSeq = Self;
-    type SerializeTuple = Self;
-    type SerializeTupleStruct = Self;
-    type SerializeTupleVariant = Self;
+    type SerializeSeq = SequenceBuffer<'a>;
+    type SerializeTuple = SequenceBuffer<'a>;
+    type SerializeTupleStruct = SequenceBuffer<'a>;
+    type SerializeTupleVariant = SequenceBuffer<'a>;
     type SerializeMap = Self;
     type SerializeStruct = Self;
     type SerializeStructVariant = Self;
@@ -200,8 +199,8 @@ impl<'a> Serializer for &'a mut WXFSerializer {
     // doesn't make a difference in JSON because the length is not represented
     // explicitly in the serialized form. Some serializers may only be able to
     // support sequences for which the length is known up front.
-    fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq> {
-        Ok(self)
+    fn serialize_seq(self, length: Option<usize>) -> Result<Self::SerializeSeq> {
+        Ok(SequenceBuffer::new(self, length.unwrap_or_default()))
     }
 
     // Tuples look just like sequences in JSON. Some formats may be able to
@@ -272,199 +271,3 @@ impl<'a> Serializer for &'a mut WXFSerializer {
     }
 }
 
-// The following 7 impls deal with the serialization of compound types like
-// sequences and maps. Serialization of such types is begun by a Serializer
-// method and followed by zero or more calls to serialize individual elements of
-// the compound type and one call to end the compound type.
-//
-// This impl is SerializeSeq so these methods are called after `serialize_seq`
-// is called on the Serializer.
-impl<'a> ser::SerializeSeq for &'a mut WXFSerializer {
-    // Must match the `Ok` type of the serializer.
-    type Ok = ();
-    // Must match the `Error` type of the serializer.
-    type Error = Error;
-
-    // Serialize a single element of the sequence.
-    fn serialize_element<T>(&mut self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
-    {
-        value.serialize(&mut **self);
-        self.list_buffer.push(self.this.to_wolfram());
-        Ok(())
-    }
-
-    // Close the sequence.
-    fn end(self) -> Result<()> {
-        self.this = self.list_buffer.to_wolfram();
-        self.list_buffer.clear();
-        Ok(())
-    }
-}
-
-// Same thing but for tuples.
-impl<'a> ser::SerializeTuple for &'a mut WXFSerializer {
-    type Ok = ();
-    type Error = Error;
-
-    fn serialize_element<T>(&mut self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
-    {
-        // if !self.inner.ends_with('[') {
-        //     self.inner += ",";
-        // }
-        // value.serialize(&mut **self)
-        unimplemented!()
-    }
-
-    fn end(self) -> Result<()> {
-        Ok(())
-    }
-}
-
-// Same thing but for tuple structs.
-impl<'a> ser::SerializeTupleStruct for &'a mut WXFSerializer {
-    type Ok = ();
-    type Error = Error;
-
-    fn serialize_field<T>(&mut self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
-    {
-        // if !self.inner.ends_with('[') {
-        //     self.inner += ",";
-        // }
-        // value.serialize(&mut **self)
-        unimplemented!()
-    }
-
-    fn end(self) -> Result<()> {
-        Ok(())
-    }
-}
-
-// Tuple variants are a little different. Refer back to the
-// `serialize_tuple_variant` method above:
-//
-//    self.output += "{";
-//    variant.serialize(&mut *self)?;
-//    self.output += ":[";
-//
-// So the `end` method in this impl is responsible for closing both the `]` and
-// the `}`.
-impl<'a> ser::SerializeTupleVariant for &'a mut WXFSerializer {
-    type Ok = ();
-    type Error = Error;
-
-    fn serialize_field<T>(&mut self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
-    {
-        // if !self.inner.ends_with('[') {
-        //     self.inner += ",";
-        // }
-        // value.serialize(&mut **self)
-        unimplemented!()
-    }
-
-    fn end(self) -> Result<()> {
-        Ok(())
-    }
-}
-
-// Some `Serialize` types are not able to hold a key and value in memory at the
-// same time so `SerializeMap` implementations are required to support
-// `serialize_key` and `serialize_value` individually.
-//
-// There is a third optional method on the `SerializeMap` trait. The
-// `serialize_entry` method allows serializers to optimize for the case where
-// key and value are both available simultaneously. In JSON it doesn't make a
-// difference so the default behavior for `serialize_entry` is fine.
-impl<'a> ser::SerializeMap for &'a mut WXFSerializer {
-    type Ok = ();
-    type Error = Error;
-
-    // The Serde data model allows map keys to be any serializable type. JSON
-    // only allows string keys so the implementation below will produce invalid
-    // JSON if the key serializes as something other than a string.
-    //
-    // A real JSON serializer would need to validate that map keys are strings.
-    // This can be done by using a different Serializer to serialize the key
-    // (instead of `&mut **self`) and having that other serializer only
-    // implement `serialize_str` and return an error on any other data type.
-    fn serialize_key<T>(&mut self, key: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
-    {
-        // if !self.inner.ends_with('{') {
-        //     self.inner += ",";
-        // }
-        // key.serialize(&mut **self)
-        unimplemented!()
-    }
-
-    // It doesn't make a difference whether the colon is printed at the end of
-    // `serialize_key` or at the beginning of `serialize_value`. In this case
-    // the code is a bit simpler having it here.
-    fn serialize_value<T>(&mut self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
-    {
-        // self.inner += ":";
-        // value.serialize(&mut **self)
-        unimplemented!()
-    }
-
-    fn end(self) -> Result<()> {
-        Ok(())
-    }
-}
-
-// Structs are like maps in which the keys are constrained to be compile-time
-// constant strings.
-// Name[a -> b, c -> d]
-impl<'a> ser::SerializeStruct for &'a mut WXFSerializer {
-    type Ok = ();
-    type Error = Error;
-
-    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
-    {
-        value.serialize(&mut **self)?;
-        self.dict_buffer.insert(key.to_wolfram(), self.this.to_wolfram());
-        Ok(())
-    }
-
-    fn end(self) -> Result<()> {
-        self.this = self.dict_buffer.to_wolfram();
-        self.dict_buffer.clear();
-        Ok(())
-    }
-}
-
-// Similar to `SerializeTupleVariant`, here the `end` method is responsible for
-// closing both of the curly braces opened by `serialize_struct_variant`.
-impl<'a> ser::SerializeStructVariant for &'a mut WXFSerializer {
-    type Ok = ();
-    type Error = Error;
-
-    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
-    {
-        // if !self.inner.ends_with('{') {
-        //     self.inner += ",";
-        // }
-        // key.serialize(&mut **self)?;
-        // self.inner += ":";
-        // value.serialize(&mut **self)
-        unimplemented!()
-    }
-
-    fn end(self) -> Result<()> {
-        Ok(())
-    }
-}
