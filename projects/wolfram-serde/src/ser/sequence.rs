@@ -1,17 +1,23 @@
 use super::*;
-use serde::ser::SerializeSeq;
+use serde::ser::{SerializeSeq, SerializeTuple, SerializeTupleStruct, SerializeTupleVariant};
 
 pub struct SequenceBuffer<'s> {
-    target: &'s mut WXFSerializer,
+    ptr: &'s mut WXFSerializer,
+    name: Option<&'static str>,
     buffer: Vec<WolframValue>,
 }
 
 impl<'s> SequenceBuffer<'s> {
-    pub fn new(ptr: &'s mut WXFSerializer, size:usize) -> Self {
-        Self {
-            target: ptr,
-            buffer: Vec::with_capacity(size)
-        }
+    pub fn new(ptr: &'s mut WXFSerializer, name: Option<&'static str>, size: usize) -> Self {
+        Self { name, ptr, buffer: Vec::with_capacity(size) }
+    }
+    fn push_sequence<T>(&mut self, value: &T) -> Result<()>
+    where
+        T: ?Sized + Serialize,
+    {
+        value.serialize(&mut *self.ptr)?;
+        self.buffer.push(self.ptr.this.to_wolfram());
+        Ok(())
     }
 }
 
@@ -19,91 +25,64 @@ impl<'a> SerializeSeq for SequenceBuffer<'a> {
     type Ok = ();
     type Error = Error;
 
-    // Serialize a single element of the sequence.
     fn serialize_element<T>(&mut self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    where
+        T: ?Sized + Serialize,
     {
-        value.serialize(&mut *self.target)?;
-        self.buffer.push(self.target.this.to_wolfram());
-        Ok(())
+        self.push_sequence(value)
     }
 
-    // Close the sequence.
     fn end(mut self) -> Result<()> {
-        self.target.this = self.buffer.to_wolfram();
-        self.buffer.clear();
-        Ok(())
+        Ok(self.ptr.this = self.buffer.to_wolfram())
     }
 }
 
 // Same thing but for tuples.
-impl<'a> ser::SerializeTuple for SequenceBuffer<'a> {
+impl<'a> SerializeTuple for SequenceBuffer<'a> {
     type Ok = ();
     type Error = Error;
 
     fn serialize_element<T>(&mut self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    where
+        T: ?Sized + Serialize,
     {
-        value.serialize(&mut *self.target)?;
-        self.buffer.push(self.target.this.to_wolfram());
-        Ok(())
+        self.push_sequence(value)
     }
 
     fn end(mut self) -> Result<()> {
-        self.target.this = self.buffer.to_wolfram();
-        self.buffer.clear();
-        Ok(())
+        Ok(self.ptr.this = self.buffer.to_wolfram())
     }
 }
 
 // Same thing but for tuple structs.
-impl<'a> ser::SerializeTupleStruct for SequenceBuffer<'a> {
+impl<'a> SerializeTupleStruct for SequenceBuffer<'a> {
     type Ok = ();
     type Error = Error;
 
     fn serialize_field<T>(&mut self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    where
+        T: ?Sized + Serialize,
     {
-        value.serialize(&mut *self.target)?;
-        self.buffer.push(self.target.this.to_wolfram());
-        Ok(())
+        self.push_sequence(value)
     }
 
     fn end(mut self) -> Result<()> {
-        self.target.this = self.buffer.to_wolfram();
-        self.buffer.clear();
-        Ok(())
+        Ok(self.ptr.this = WolframValue::function(self.name.unwrap(), self.buffer))
     }
 }
 
-// Tuple variants are a little different. Refer back to the
-// `serialize_tuple_variant` method above:
-//
-//    self.output += "{";
-//    variant.serialize(&mut *self)?;
-//    self.output += ":[";
-//
-// So the `end` method in this impl is responsible for closing both the `]` and
-// the `}`.
-impl<'a> ser::SerializeTupleVariant for SequenceBuffer<'a> {
+impl<'a> SerializeTupleVariant for SequenceBuffer<'a> {
     type Ok = ();
     type Error = Error;
 
     fn serialize_field<T>(&mut self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    where
+        T: ?Sized + Serialize,
     {
-        value.serialize(&mut *self.target)?;
-        self.buffer.push(self.target.this.to_wolfram());
-        Ok(())
+        self.push_sequence(value)
     }
 
     fn end(mut self) -> Result<()> {
-        self.target.this = self.buffer.to_wolfram();
-        self.buffer.clear();
-        Ok(())
+        Ok(self.ptr.this = WolframValue::function(self.name.unwrap(), self.buffer))
     }
 }

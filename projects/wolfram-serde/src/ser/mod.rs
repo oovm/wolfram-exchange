@@ -1,12 +1,12 @@
-mod sequence;
 mod association;
+mod sequence;
 
 use serde::{ser, Serialize, Serializer};
-use wolfram_wxf::{WolframValue, ToWolfram};
+use wolfram_wxf::{ToWolfram, WolframValue};
 
-use crate::{WXFError as Error, Result};
+pub use self::{association::AssociationBuffer, sequence::SequenceBuffer};
+use crate::{Result, WXFError as Error};
 use std::collections::BTreeMap;
-pub use self::sequence::SequenceBuffer;
 
 impl ToWolfram for WXFSerializer {
     fn to_wolfram(&self) -> WolframValue {
@@ -21,10 +21,7 @@ pub struct WXFSerializer {
 
 impl Default for WXFSerializer {
     fn default() -> Self {
-        Self {
-            this: WolframValue::Skip,
-            dict_buffer: Default::default()
-        }
+        Self { this: WolframValue::Skip, dict_buffer: Default::default() }
     }
 }
 
@@ -107,63 +104,51 @@ impl<'a> Serializer for &'a mut WXFSerializer {
     // Serialize a byte array as an array of bytes. Could also use a base64
     // string here. Binary formats will typically represent byte arrays more
     // compactly.
-    fn serialize_bytes(self, v: &[u8]) -> Result<()> {
-        //Ok(self.buffer.extend_from_slice(&v.to_wolfram_bytes()))
+    fn serialize_bytes(self, _v: &[u8]) -> Result<()> {
+        // WolframValue::PackedArray()
         unimplemented!()
     }
 
-    // todo
+    /// None
     fn serialize_none(self) -> Result<()> {
-        //self.serialize_unit()
-        unimplemented!()
+        Ok(self.this = WolframValue::symbol("None"))
     }
 
     fn serialize_some<T>(self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    where
+        T: ?Sized + Serialize,
     {
-        unimplemented!()
-        //value.serialize(self)
+        value.serialize(self)
     }
 
-    // In Serde, unit means an anonymous value containing no data. Map this to
-    // JSON as `null`.
+    /// In Serde, unit means an anonymous value containing no data.
+    /// Nothing to output, aka Null in wolfram language
     fn serialize_unit(self) -> Result<()> {
-        //self.inner += "null";
-        unimplemented!();
+        Ok(self.this = WolframValue::symbol("Null"))
     }
 
     // Unit struct means a named value containing no data. Again, since there is
     // no data, map this to JSON as `null`. There is no need to serialize the
     // name in most formats.
     fn serialize_unit_struct(self, _name: &'static str) -> Result<()> {
-        self.serialize_unit()
+        unimplemented!()
     }
 
     // When serializing a unit variant (or any other kind of variant), formats
     // can choose whether to keep track of it by index or by name. Binary
     // formats typically use the index of the variant and human-readable formats
     // typically use the name.
-    fn serialize_unit_variant(
-        self,
-        _name: &'static str,
-        _variant_index: u32,
-        variant: &'static str,
-    ) -> Result<()> {
-        self.serialize_str(variant)
+    fn serialize_unit_variant(self, _name: &'static str, _variant_index: u32, _variant: &'static str) -> Result<()> {
+        unimplemented!()
     }
 
     // As is done here, serializers are encouraged to treat newtype structs as
     // insignificant wrappers around the data they contain.
-    fn serialize_newtype_struct<T>(
-        self,
-        _name: &'static str,
-        value: &T,
-    ) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    fn serialize_newtype_struct<T>(self, _name: &'static str, _value: &T) -> Result<()>
+    where
+        T: ?Sized + Serialize,
     {
-        value.serialize(self)
+        unimplemented!()
     }
 
     // Note that newtype variant (and all of the other variant serialization
@@ -171,21 +156,10 @@ impl<'a> Serializer for &'a mut WXFSerializer {
     // representation.
     //
     // Serialize this to JSON in externally tagged form as `{ NAME: VALUE }`.
-    fn serialize_newtype_variant<T>(
-        self,
-        _name: &'static str,
-        _variant_index: u32,
-        variant: &'static str,
-        value: &T,
-    ) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    fn serialize_newtype_variant<T>(self, _name: &'static str, _variant_index: u32, _variant: &'static str, _value: &T) -> Result<()>
+    where
+        T: ?Sized + Serialize,
     {
-        // self.inner += "{";
-        // variant.serialize(&mut *self)?;
-        // self.inner += ":";
-        // value.serialize(&mut *self)?;
-        // self.inner += "}";
         unimplemented!()
     }
 
@@ -200,40 +174,32 @@ impl<'a> Serializer for &'a mut WXFSerializer {
     // explicitly in the serialized form. Some serializers may only be able to
     // support sequences for which the length is known up front.
     fn serialize_seq(self, length: Option<usize>) -> Result<Self::SerializeSeq> {
-        Ok(SequenceBuffer::new(self, length.unwrap_or_default()))
+        Ok(SequenceBuffer::new(self, None, length.unwrap_or_default()))
     }
 
     // Tuples look just like sequences in JSON. Some formats may be able to
     // represent tuples more efficiently by omitting the length, since tuple
     // means that the corresponding `Deserialize implementation will know the
     // length without needing to look at the serialized data.
-    fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple> {
-        self.serialize_seq(Some(len))
+    fn serialize_tuple(self, length: usize) -> Result<Self::SerializeTuple> {
+        Ok(SequenceBuffer::new(self, None, length))
     }
 
     // Tuple structs look just like sequences in JSON.
-    fn serialize_tuple_struct(
-        self,
-        _name: &'static str,
-        len: usize,
-    ) -> Result<Self::SerializeTupleStruct> {
-        self.serialize_seq(Some(len))
+    fn serialize_tuple_struct(self, name: &'static str, length: usize) -> Result<Self::SerializeTupleStruct> {
+        Ok(SequenceBuffer::new(self, Some(name), length))
     }
 
     // Tuple variants are represented in JSON as `{ NAME: [DATA...] }`. Again
     // this method is only responsible for the externally tagged representation.
     fn serialize_tuple_variant(
         self,
-        _name: &'static str,
+        name: &'static str,
         _variant_index: u32,
-        variant: &'static str,
-        _len: usize,
+        _variant: &'static str,
+        length: usize,
     ) -> Result<Self::SerializeTupleVariant> {
-        // self.inner += "{";
-        // variant.serialize(&mut *self)?;
-        // self.inner += ":[";
-        // Ok(self)
-        unimplemented!()
+        Ok(SequenceBuffer::new(self, Some(name), length))
     }
 
     // Maps are represented in JSON as `{ K: V, K: V, ... }`.
@@ -246,11 +212,7 @@ impl<'a> Serializer for &'a mut WXFSerializer {
     // omit the field names when serializing structs because the corresponding
     // Deserialize implementation is required to know what the keys are without
     // looking at the serialized data.
-    fn serialize_struct(
-        self,
-        _name: &'static str,
-        len: usize,
-    ) -> Result<Self::SerializeStruct> {
+    fn serialize_struct(self, _name: &'static str, len: usize) -> Result<Self::SerializeStruct> {
         self.serialize_map(Some(len))
     }
 
@@ -260,7 +222,7 @@ impl<'a> Serializer for &'a mut WXFSerializer {
         self,
         _name: &'static str,
         _variant_index: u32,
-        variant: &'static str,
+        _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStructVariant> {
         // self.inner += "{";
@@ -270,4 +232,3 @@ impl<'a> Serializer for &'a mut WXFSerializer {
         unimplemented!()
     }
 }
-

@@ -24,11 +24,8 @@ fn length_encoding(len: usize) -> Vec<u8> {
     return buf.to_vec();
 }
 
-
 #[test]
 fn test_var_encoding() {
-    let check = vec![0usize, 1, 64, 127, 128, 255, 256, 1024, 2048]
-        .iter()
-        .all(|u| u.encode_var_vec() == length_encoding(*u));
+    let check = vec![0usize, 1, 64, 127, 128, 255, 256, 1024, 2048].iter().all(|u| u.encode_var_vec() == length_encoding(*u));
     assert!(check)
 }

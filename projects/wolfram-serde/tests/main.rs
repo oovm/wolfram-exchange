@@ -1,6 +1,12 @@
-use serde::{Serialize};
-use serde_wxf::{WXFSerializer};
+use serde::Serialize;
+use serde_wxf::WXFSerializer;
 use wolfram_wxf::ToWolfram;
+
+
+#[test]
+fn main() {
+    println!("Hello Wolfram!")
+}
 
 
 #[test]
@@ -24,41 +30,34 @@ fn test_list() {
     vec![0].serialize(&mut serializer).unwrap();
     assert_eq!(serializer.to_wolfram_string(), "{0}");
 
-    vec![vec![0],vec![1]].serialize(&mut serializer).unwrap();
+    vec![vec![0], vec![1]].serialize(&mut serializer).unwrap();
     assert_eq!(serializer.to_wolfram_string(), "{{0},{1}}");
 
-    (vec![0],vec![1]).serialize(&mut serializer).unwrap();
+    (vec![0], vec![1]).serialize(&mut serializer).unwrap();
     assert_eq!(serializer.to_wolfram_string(), "{{0},{1}}");
 }
 
 #[derive(Serialize)]
-struct TestTuple(u32, Vec<&'static str>);
+struct TestTuple(usize, Vec<usize>);
 
 #[derive(Serialize)]
 struct TestStruct {
-    int: u32,
-    seq: Vec<&'static str>,
+    int: usize,
+    seq: Vec<usize>,
 }
 
 #[test]
 fn test_struct() {
     let mut serializer = WXFSerializer::default();
-    let test = TestStruct {
-        int: 1,
-        seq: vec!["a", "b"],
-    };
+    let test = TestStruct { int: 0, seq: vec![1, 2] };
     test.serialize(&mut serializer).unwrap();
     // let expected = r#"Test["int"->1,"seq"->{"a","b"}]"#;
-    assert_eq!(serializer.to_wolfram_string(), r#"<|"int"->1,"seq"->{"a","b"}|>"#);
+    assert_eq!(serializer.to_wolfram_string(), r#"<|"int"->0,"seq"->{1,2}|>"#);
 
-    let test = TestTuple(
-        1,
-        vec!["a", "b"],
-    );
+    let test = TestTuple(0, vec![1, 2]);
     test.serialize(&mut serializer).unwrap();
     // let expected = r#"Test["int"->1,"seq"->{"a","b"}]"#;
-    assert_eq!(serializer.to_wolfram_string(), r#"{1,{"a","b"}}"#);
-
+    assert_eq!(serializer.to_wolfram_string(), r#"TestTuple[0,{1,2}]"#);
 }
 
 //

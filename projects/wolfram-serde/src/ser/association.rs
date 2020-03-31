@@ -1,6 +1,11 @@
 use super::*;
 
-
+#[allow(dead_code)]
+pub struct AssociationBuffer<'s> {
+    ptr: &'s mut WXFSerializer,
+    name: Option<&'static str>,
+    buffer: BTreeMap<WolframValue, WolframValue>,
+}
 
 // Some `Serialize` types are not able to hold a key and value in memory at the
 // same time so `SerializeMap` implementations are required to support
@@ -22,9 +27,9 @@ impl<'a> ser::SerializeMap for &'a mut WXFSerializer {
     // This can be done by using a different Serializer to serialize the key
     // (instead of `&mut **self`) and having that other serializer only
     // implement `serialize_str` and return an error on any other data type.
-    fn serialize_key<T>(&mut self, key: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    fn serialize_key<T>(&mut self, _key: &T) -> Result<()>
+    where
+        T: ?Sized + Serialize,
     {
         // if !self.inner.ends_with('{') {
         //     self.inner += ",";
@@ -36,9 +41,9 @@ impl<'a> ser::SerializeMap for &'a mut WXFSerializer {
     // It doesn't make a difference whether the colon is printed at the end of
     // `serialize_key` or at the beginning of `serialize_value`. In this case
     // the code is a bit simpler having it here.
-    fn serialize_value<T>(&mut self, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    fn serialize_value<T>(&mut self, _value: &T) -> Result<()>
+    where
+        T: ?Sized + Serialize,
     {
         // self.inner += ":";
         // value.serialize(&mut **self)
@@ -58,8 +63,8 @@ impl<'a> ser::SerializeStruct for &'a mut WXFSerializer {
     type Error = Error;
 
     fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    where
+        T: ?Sized + Serialize,
     {
         value.serialize(&mut **self)?;
         self.dict_buffer.insert(key.to_wolfram(), self.this.to_wolfram());
@@ -79,9 +84,9 @@ impl<'a> ser::SerializeStructVariant for &'a mut WXFSerializer {
     type Ok = ();
     type Error = Error;
 
-    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    fn serialize_field<T>(&mut self, _key: &'static str, _value: &T) -> Result<()>
+    where
+        T: ?Sized + Serialize,
     {
         // if !self.inner.ends_with('{') {
         //     self.inner += ",";

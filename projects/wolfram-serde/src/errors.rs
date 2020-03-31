@@ -1,9 +1,11 @@
-use std::error::Error;
-use std::fmt::{self, Display, Formatter};
+use std::{
+    error::Error,
+    fmt::{self, Display, Formatter},
+};
 
 #[derive(Debug)]
 pub enum WXFError {
-    Custom(String)
+    Custom(String),
 }
 
 impl Display for WXFError {
@@ -12,11 +14,13 @@ impl Display for WXFError {
     }
 }
 
-impl Error for WXFError {  }
+impl Error for WXFError {}
 
 impl serde::ser::Error for WXFError {
-    fn custom<T>(msg: T) -> Self where
-        T: Display {
+    fn custom<T>(msg: T) -> Self
+    where
+        T: Display,
+    {
         Self::Custom(msg.to_string())
     }
 }

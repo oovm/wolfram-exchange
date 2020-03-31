@@ -1,11 +1,8 @@
-mod ser;
 mod de;
 mod errors;
+mod ser;
 
-pub use self::errors::{Result, WXFError};
-pub use self::ser::{WXFSerializer};
-
-#[test]
-fn main() {
-    println!("Hello Wolfram!")
-}
+pub use self::{
+    errors::{Result, WXFError},
+    ser::{AssociationBuffer, SequenceBuffer, WXFSerializer},
+};
