@@ -6,3 +6,5 @@
 # Rust
 target/
 Cargo.lock
+*.ps1
+*.nb

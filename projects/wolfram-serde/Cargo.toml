@@ -1,6 +1,6 @@
 [package]
 name = "serde_wxf"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
 repository = "https://github.com/oovm/wolfram-exchange"
@@ -14,7 +14,7 @@ version = "1.0"
 features = ["derive"]
 
 [dependencies.wolfram_wxf]
-version = "0.5"
+version = "0.6"
 path = "../wolfram-lib"
 
 
