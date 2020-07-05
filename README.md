@@ -7,7 +7,7 @@ Wolfram Exchange Format with Rust
 
 To support format conversion, just implement the ToWolfram trait.
 
-```rs
+```rust
 pub trait ToWolfram {
     fn to_wolfram(&self) -> WolframValue;
     fn to_wolfram_string(&self) -> String {self.to_wolfram().to_string()}
@@ -18,7 +18,7 @@ pub trait ToWolfram {
 
 WolframValue consists of the following legal elements:
 
-```rs
+```rust
 pub enum WolframValue {
     /// Function with name, args
     Function(Box<str>, Vec<WolframValue>),
@@ -49,7 +49,7 @@ pub enum WolframValue {
 
 Here are some common formats supported now:
 
-```rs
+```rust
 pub enum SupportedFormat {
     JSON, //json
     TOML, //toml
