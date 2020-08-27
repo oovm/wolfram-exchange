@@ -1,9 +1,9 @@
+#[cfg(feature = "toml")]
+pub use self::toml::parse_toml;
 #[cfg(feature = "json")]
 pub use json::parse_json;
 #[cfg(feature = "yaml")]
 pub use yaml::parse_yaml;
-#[cfg(feature = "toml")]
-pub use self::toml::parse_toml;
 
 #[cfg(feature = "json")]
 mod json {
@@ -50,10 +50,9 @@ mod json {
 
 #[cfg(feature = "toml")]
 mod toml {
-    use crate::{ToWolfram, WolframValue};
+    use crate::{objects::date_object, ToWolfram, WolframValue};
     use std::collections::BTreeMap;
     use toml::Value;
-    use crate::objects::date_object;
 
     impl ToWolfram for Value {
         fn to_wolfram(&self) -> WolframValue {
@@ -155,5 +154,15 @@ mod pickle {
                 HashableValue::FrozenSet(o) => o.to_wolfram(),
             }
         }
+    }
+}
+
+#[cfg(feature = "numpy")]
+mod numpy {
+    use npy::NpyData;
+    use std::io::Read;
+
+    fn test(input: &[u8]) {
+        let data = NpyData::from_bytes(input);
     }
 }

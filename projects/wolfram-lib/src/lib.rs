@@ -4,8 +4,8 @@ use std::{
     fmt::{self, Display},
 };
 
-pub mod utils;
 pub mod objects;
+pub mod utils;
 
 pub trait ToWolfram {
     fn to_wolfram(&self) -> WolframValue;
@@ -22,6 +22,7 @@ pub trait ToWolfram {
 
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub enum WolframValue {
+    Skip,
     /// Function with name, args
     Function(Box<str>, Vec<WolframValue>),
     String(Box<str>),
@@ -48,6 +49,7 @@ pub enum WolframValue {
 impl Display for WolframValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            WolframValue::Skip => write!(f, ""),
             WolframValue::Function(name, args) => {
                 let v: Vec<String> = args.iter().map(|v| v.to_string()).collect();
                 if name.to_string() == "List" { write!(f, "{{{}}}", v.join(",")) } else { write!(f, "{}[{}]", name.to_string(), v.join(",")) }

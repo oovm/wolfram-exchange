@@ -1,6 +1,6 @@
 [package]
 name = "wolfram_wxf"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
 repository = "https://github.com/GalAster/wolfram-exchange"
@@ -11,10 +11,14 @@ edition = "2018"
 [dependencies]
 num = "0.2"
 flate2 = "1.0"
+ndarray = "0.13"
+
+
 serde_json = {version="1.0",optional=true}
 yaml-rust =  {version="0.4",optional=true}
 toml =  {version="0.5",optional=true}
 serde-pickle =  {version="0.6",optional=true}
+npy =  {version="0.4",optional=true}
 
 [features]
 default = []
@@ -22,3 +26,4 @@ json = ["serde_json"]
 yaml = ["yaml-rust"]
 pickle = ["serde-pickle"]
 # toml = ["toml"]
+numpy = ["npy"]

@@ -25,6 +25,7 @@ impl WolframValue {
     }
     fn to_bytes_inner(&self) -> Vec<u8> {
         match self {
+            WolframValue::Skip => vec![],
             WolframValue::Function(name, args) => {
                 let mut out = Vec::new();
                 out.push(b'f');

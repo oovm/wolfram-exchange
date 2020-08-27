@@ -62,3 +62,6 @@ Because rust cannot define traits and structs externally at the same time, suppo
 
 See [From Traits Extension](https://github.com/GalAster/wolfram-exchange/blob/master/projects/wolfram-lib/src/utils/from_traits_extension.rs) to learn how to support new format
 
+### Tools
+
+- [wex](https://github.com/GalAster/wolfram-exchange-cli): A command line tool that can convert wxf format
