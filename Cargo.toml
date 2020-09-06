@@ -6,3 +6,10 @@ default-members = [
     "projects/wolfram-lib",
 ]
 
+exclude = [
+    "projects/.DS_Store",
+    "projects/project-logo",
+]
+
+[profile.release]
+lto = true
