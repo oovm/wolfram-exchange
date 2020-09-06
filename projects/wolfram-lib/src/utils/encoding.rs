@@ -26,11 +26,11 @@ impl WolframValue {
     fn to_bytes_inner(&self) -> Vec<u8> {
         match self {
             WolframValue::Skip => vec![],
-            WolframValue::Function(name, args) => {
+            WolframValue::Function(head, args) => {
                 let mut out = Vec::new();
                 out.push(b'f');
                 out.extend_from_slice(&length_encoding(args.len()));
-                out.extend_from_slice(&WolframValue::new_symbol(name).to_bytes_inner());
+                out.extend_from_slice(&head.to_bytes_inner());
                 for v in args {
                     out.extend_from_slice(&v.to_bytes_inner())
                 }

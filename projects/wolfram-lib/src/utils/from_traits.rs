@@ -7,7 +7,7 @@ use std::{
 
 impl ToWolfram for bool {
     fn to_wolfram(&self) -> WolframValue {
-        if *self { WolframValue::new_symbol("True") } else { WolframValue::new_symbol("False") }
+        if *self { WolframValue::symbol("True") } else { WolframValue::symbol("False") }
     }
 }
 
@@ -55,7 +55,7 @@ impl ToWolfram for i64 {
 
 impl ToWolfram for i128 {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::new_integer(*self)
+        WolframValue::integer(*self)
     }
 }
 
@@ -79,25 +79,25 @@ impl ToWolfram for u32 {
 
 impl ToWolfram for u64 {
     fn to_wolfram(&self) -> WolframValue {
-        if *self <= 9223372036854775807 { (*self as i64).to_wolfram() } else { WolframValue::new_integer(*self) }
+        if *self <= 9223372036854775807 { (*self as i64).to_wolfram() } else { WolframValue::integer(*self) }
     }
 }
 
 impl ToWolfram for u128 {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::new_integer(*self)
+        WolframValue::integer(*self)
     }
 }
 
 impl ToWolfram for isize {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::new_integer(*self as i64)
+        WolframValue::integer(*self as i64)
     }
 }
 
 impl ToWolfram for usize {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::new_integer(*self as u64)
+        WolframValue::integer(*self as u64)
     }
 }
 
@@ -128,44 +128,44 @@ impl ToWolfram for f64 {
 impl<T: ToWolfram + Clone> ToWolfram for Ratio<T> {
     fn to_wolfram(&self) -> WolframValue {
         let r = vec![(*self.numer()).clone(), (*self.denom()).clone()];
-        WolframValue::new_function("Rational", r)
+        WolframValue::function("Rational", r)
     }
 }
 
 impl<T: ToWolfram + Copy> ToWolfram for Complex<T> {
     fn to_wolfram(&self) -> WolframValue {
         let r = vec![self.re, self.im];
-        WolframValue::new_function("Complex", r)
+        WolframValue::function("Complex", r)
     }
 }
 
 impl<T: ToWolfram> ToWolfram for Vec<T> {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
+        WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
     }
 }
 
 impl<T: ToWolfram> ToWolfram for VecDeque<T> {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
+        WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
     }
 }
 
 impl<T: ToWolfram> ToWolfram for LinkedList<T> {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
+        WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
     }
 }
 
 impl<T: ToWolfram> ToWolfram for HashSet<T> {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
+        WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
     }
 }
 
 impl<T: ToWolfram> ToWolfram for BTreeSet<T> {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::new_list(self.iter().map(|s| s.to_wolfram()).collect())
+        WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
     }
 }
 

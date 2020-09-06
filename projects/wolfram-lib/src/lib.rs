@@ -24,7 +24,7 @@ pub trait ToWolfram {
 pub enum WolframValue {
     Skip,
     /// Function with name, args
-    Function(Box<str>, Vec<WolframValue>),
+    Function(Box<WolframValue>, Vec<WolframValue>),
     String(Box<str>),
     Bytes(Vec<u8>),
     Symbol(Box<str>),
@@ -50,9 +50,9 @@ impl Display for WolframValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             WolframValue::Skip => write!(f, ""),
-            WolframValue::Function(name, args) => {
+            WolframValue::Function(head, args) => {
                 let v: Vec<String> = args.iter().map(|v| v.to_string()).collect();
-                if name.to_string() == "List" { write!(f, "{{{}}}", v.join(",")) } else { write!(f, "{}[{}]", name.to_string(), v.join(",")) }
+                if head.to_string() == "List" { write!(f, "{{{}}}", v.join(",")) } else { write!(f, "{}[{}]", head.to_string(), v.join(",")) }
             }
             WolframValue::String(s) => write!(f, "{:?}", s),
             WolframValue::Bytes(b) => {

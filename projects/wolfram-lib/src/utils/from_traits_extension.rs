@@ -13,7 +13,7 @@ mod json {
     impl ToWolfram for Value {
         fn to_wolfram(&self) -> WolframValue {
             match self {
-                Value::Null => WolframValue::new_symbol("None"),
+                Value::Null => WolframValue::symbol("None"),
                 Value::Bool(o) => o.to_wolfram(),
                 Value::Number(n) => n.to_wolfram(),
                 Value::String(s) => s.to_wolfram(),
@@ -88,7 +88,7 @@ mod yaml {
     impl ToWolfram for Yaml {
         fn to_wolfram(&self) -> WolframValue {
             match self {
-                Yaml::Null => WolframValue::new_symbol("None"),
+                Yaml::Null => WolframValue::symbol("None"),
                 Yaml::Real(n) => n.parse::<f64>().unwrap_or(0.0).to_wolfram(),
                 Yaml::Integer(n) => n.to_wolfram(),
                 Yaml::String(s) => s.to_wolfram(),
@@ -103,14 +103,14 @@ mod yaml {
                     WolframValue::Association(map)
                 }
                 Yaml::Alias(o) => o.to_wolfram(),
-                Yaml::BadValue => WolframValue::new_symbol("Null"),
+                Yaml::BadValue => WolframValue::symbol("Null"),
             }
         }
     }
     pub fn parse_yaml(input: &str) -> Result<WolframValue, ScanError> {
         let parsed = YamlLoader::load_from_str(input)?;
         let v = match parsed.len() {
-            0 => WolframValue::new_symbol("None"),
+            0 => WolframValue::symbol("None"),
             1 => parsed[0].to_wolfram(),
             _ => parsed.to_wolfram(),
         };
@@ -125,7 +125,7 @@ mod pickle {
     impl ToWolfram for Value {
         fn to_wolfram(&self) -> WolframValue {
             match self {
-                Value::None => WolframValue::new_symbol("None"),
+                Value::None => WolframValue::symbol("None"),
                 Value::Bool(b) => b.to_wolfram(),
                 Value::I64(i) => i.to_wolfram(),
                 Value::Int(i) => i.to_wolfram(),
@@ -143,7 +143,7 @@ mod pickle {
     impl ToWolfram for HashableValue {
         fn to_wolfram(&self) -> WolframValue {
             match self {
-                HashableValue::None => WolframValue::new_symbol("None"),
+                HashableValue::None => WolframValue::symbol("None"),
                 HashableValue::Bool(b) => b.to_wolfram(),
                 HashableValue::I64(i) => i.to_wolfram(),
                 HashableValue::Int(i) => i.to_wolfram(),
