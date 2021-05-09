@@ -13,7 +13,7 @@ edition = "2018"
 serde  = "1.0"
 
 [dependencies.wolfram_wxf]
-version = "0.4.0"
+version = "0.5"
 path = "../wolfram-lib"
 
 

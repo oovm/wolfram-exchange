@@ -5,6 +5,12 @@ use std::{
     intrinsics::transmute,
 };
 
+impl ToWolfram for WolframValue {
+    fn to_wolfram(&self) -> WolframValue {
+        self.clone()
+    }
+}
+
 impl ToWolfram for bool {
     fn to_wolfram(&self) -> WolframValue {
         if *self { WolframValue::symbol("True") } else { WolframValue::symbol("False") }
