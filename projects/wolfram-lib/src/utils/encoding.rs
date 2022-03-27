@@ -4,19 +4,22 @@ use integer_encoding::VarInt;
 use std::{collections::BTreeSet, io::Write, mem::transmute};
 
 impl WolframValue {
+    /// Encode a value into a byte vector.
     pub fn to_string(&self) -> String {
         format!("{}", self)
     }
+    /// Encode a value into a byte vector.
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut out = Vec::new();
         out.extend_from_slice(b"8:");
-        self.write_bytes_inner(&mut out);
+        self.write_bytes(&mut out);
         return out;
     }
+    /// Encode a value into a compressed byte vector.
     pub fn to_compressed(&self) -> Vec<u8> {
         let mut input = Vec::new();
         let mut e = ZlibEncoder::new(vec![], Compression::new(9));
-        self.write_bytes_inner(&mut input);
+        self.write_bytes(&mut input);
         let mut out = Vec::with_capacity(input.len());
         match e.write_all(&input) {
             Ok(_) => out.extend_from_slice(b"8C:"),
@@ -30,15 +33,16 @@ impl WolframValue {
         };
         return out;
     }
-    pub fn write_bytes_inner(&self, out: &mut Vec<u8>) {
+    /// Write value to a byte vector.
+    pub fn write_bytes(&self, out: &mut Vec<u8>) {
         match self {
             WolframValue::Skip => (),
             WolframValue::Function(head, args) => {
                 out.push(b'f');
                 out.extend_from_slice(&args.len().encode_var_vec());
-                head.write_bytes_inner(out);
+                head.write_bytes(out);
                 for v in args {
-                    v.write_bytes_inner(out)
+                    v.write_bytes(out)
                 }
             }
             WolframValue::String(s) => {
@@ -98,9 +102,9 @@ impl WolframValue {
                 out.push(b'A');
                 out.extend_from_slice(&dict.len().encode_var_vec());
                 for (k, (r, v)) in dict {
-                    r.write_bytes_inner(out);
-                    k.write_bytes_inner(out);
-                    v.write_bytes_inner(out);
+                    r.write_bytes(out);
+                    k.write_bytes(out);
+                    v.write_bytes(out);
                 }
             }
             WolframValue::Rule => out.push(b'-'),

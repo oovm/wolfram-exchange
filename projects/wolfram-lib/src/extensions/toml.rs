@@ -23,6 +23,7 @@ impl ToWolfram for Value {
     }
 }
 
+/// Convert a toml value to a Wolfram value
 pub fn parse_toml(input: &str) -> Result<WolframValue, toml::de::Error> {
     Ok(input.parse::<Value>()?.to_wolfram())
 }
