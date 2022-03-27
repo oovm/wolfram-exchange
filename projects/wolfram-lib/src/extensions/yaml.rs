@@ -1,4 +1,4 @@
-use crate::{ToWolfram, WolframValue};
+use crate::{Result, ToWolfram, WolframError, WolframValue};
 use std::collections::BTreeMap;
 use yaml_rust::{ScanError, Yaml, YamlLoader};
 
@@ -25,8 +25,14 @@ impl ToWolfram for Yaml {
     }
 }
 
+impl From<ScanError> for WolframError {
+    fn from(e: ScanError) -> Self {
+        WolframError::SyntaxError(format!("{}", e))
+    }
+}
+
 /// Convert a YAML string to a Wolfram value.
-pub fn parse_yaml(input: &str) -> Result<WolframValue, ScanError> {
+pub fn parse_yaml(input: &str) -> Result<WolframValue> {
     let parsed = YamlLoader::load_from_str(input)?;
     let v = match parsed.len() {
         0 => WolframValue::symbol("None"),

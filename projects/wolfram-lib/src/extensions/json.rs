@@ -1,4 +1,4 @@
-use crate::{Result, ToWolfram, WolframValue};
+use crate::{Result, ToWolfram, WolframError, WolframValue};
 use serde_json::{Number, Value};
 use std::collections::BTreeMap;
 
@@ -33,6 +33,18 @@ impl ToWolfram for Number {
         else {
             self.as_f64().unwrap_or(0.0).to_wolfram()
         }
+    }
+}
+
+impl From<serde_json::Error> for WolframError {
+    fn from(e: serde_json::Error) -> Self {
+        WolframError::SyntaxError(e.to_string())
+    }
+}
+
+impl From<json5::Error> for WolframError {
+    fn from(e: json5::Error) -> Self {
+        WolframError::SyntaxError(e.to_string())
     }
 }
 

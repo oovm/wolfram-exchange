@@ -1,4 +1,4 @@
-use crate::{date_object, ToWolfram, WolframValue};
+use crate::{date_object, Result, ToWolfram, WolframError, WolframValue};
 use std::collections::BTreeMap;
 use toml::Value;
 
@@ -23,7 +23,13 @@ impl ToWolfram for Value {
     }
 }
 
+impl From<toml::de::Error> for WolframError {
+    fn from(e: toml::de::Error) -> Self {
+        WolframError::SyntaxError(e.to_string())
+    }
+}
+
 /// Convert a toml value to a Wolfram value
-pub fn parse_toml(input: &str) -> Result<WolframValue, toml::de::Error> {
+pub fn parse_toml(input: &str) -> Result<WolframValue> {
     Ok(input.parse::<Value>()?.to_wolfram())
 }

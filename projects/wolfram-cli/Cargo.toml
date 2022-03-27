@@ -14,7 +14,7 @@ name = "wex"
 path = "src/main.rs"
 
 [dependencies]
-clap= "3.1.6"
+clap = { version = "3.1.6", features = ["derive"] }
 
 [dependencies.wolfram_wxf]
 version = "0.6.2"

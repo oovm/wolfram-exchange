@@ -1,7 +1,9 @@
 pub mod utils;
 
 use crate::utils::{parse_file, write_to_file};
-use clap::{App, Arg};
+use clap::Parser;
+use std::path::PathBuf;
+use wolfram_wxf::Result;
 
 #[derive(Debug)]
 pub enum SupportedFormat {
@@ -11,64 +13,40 @@ pub enum SupportedFormat {
     Pickle,
 }
 
-#[derive(Debug)]
-pub enum Error {
-    NullException,
-    FileNotFound,
-    PermissionDenied,
-    UnknownIOError,
-    ParseFailed,
+/// The main entry point for the program.
+#[derive(Debug, Parser)]
+#[clap(author, version, about, long_about = None)]
+pub struct WolframExchange {
+    /// Sets the input file to use
+    #[clap(parse(from_os_str), value_name = "FILE")]
+    input: PathBuf,
+
+    /// Sets a custom config file
+    #[clap(short = 't', long = "text")]
+    generate_text: bool,
+    /// Sets a custom config file
+    #[clap(short = 'b', long = "binary")]
+    generate_binary: bool,
+    /// Sets a custom config file
+    #[clap(short = 'c', long = "compress")]
+    generate_compress: bool,
+    /// Sets the input file format
+    #[clap(short, long)]
+    format: Option<String>,
 }
 
-fn main() -> Result<(), Error> {
-    #[rustfmt::skip]
-        let matches = App::new("Wolfram Format Converter")
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .arg(Arg::with_name("INPUT")
-            .help("Sets the input file to use")
-        .required(true)
-            .index(1))
-        .arg(Arg::with_name("Text")
-            .short("t")
-            .long("text")
-            .help("Generates m file")
-            .multiple(true)
-            .takes_value(false))
-        .arg(Arg::with_name("Binary")
-            .short("b")
-            .long("binary")
-            .help("Generates wxf file")
-            .multiple(true)
-            .takes_value(false))
-        .arg(Arg::with_name("Compress")
-            .short("c")
-            .long("compress")
-            .help("Generates mx file")
-            .multiple(true)
-            .takes_value(false))
-        .arg(Arg::with_name("File Format")
-            .short("f")
-            .long("format")
-            .value_name("Format")
-            .help("Sets the input file format")
-            .takes_value(true))
-        .get_matches();
-    let input = matches.value_of("INPUT").unwrap();
-
-    let value = parse_file(input, matches.value_of("File Format"))?;
-    match matches.occurrences_of("Text") {
-        0 => (),
-        _ => write_to_file(&format!("{}.m", input), value.to_string().as_bytes())?,
+fn main() -> Result<()> {
+    let app = WolframExchange::parse();
+    println!("{:#?}", app);
+    let value = parse_file(&app.input, app.format)?;
+    if app.generate_text {
+        write_to_file(&app.input.join(".m"), value.to_string().as_bytes())?
     }
-    match matches.occurrences_of("Binary") {
-        0 => (),
-        _ => write_to_file(&format!("{}.wxf", input), &value.to_bytes())?,
+    if app.generate_binary {
+        write_to_file(&app.input.join(".wxf"), value.to_string().as_bytes())?
     }
-    match matches.occurrences_of("Compress") {
-        0 => (),
-        _ => write_to_file(&format!("{}.mx", input), &value.to_compressed())?,
-    };
+    if app.generate_compress {
+        write_to_file(&app.input.join(".mx"), value.to_string().as_bytes())?
+    }
     Ok(())
 }
