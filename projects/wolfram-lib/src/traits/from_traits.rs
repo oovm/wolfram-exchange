@@ -3,6 +3,7 @@ use num::{bigint::Sign, rational::Ratio, BigInt, BigUint, Complex};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque},
     intrinsics::transmute,
+    time::{Duration, Instant, SystemTime},
 };
 
 impl ToWolfram for WolframValue {
@@ -131,6 +132,24 @@ impl ToWolfram for f64 {
     }
 }
 
+impl ToWolfram for Duration {
+    fn to_wolfram(&self) -> WolframValue {
+        todo!()
+    }
+}
+
+impl ToWolfram for Instant {
+    fn to_wolfram(&self) -> WolframValue {
+        todo!()
+    }
+}
+
+impl ToWolfram for SystemTime {
+    fn to_wolfram(&self) -> WolframValue {
+        todo!()
+    }
+}
+
 impl<T> ToWolfram for Ratio<T>
 where
     T: ToWolfram + Clone,
@@ -151,68 +170,40 @@ where
     }
 }
 
-impl<T> ToWolfram for Vec<T>
-where
-    T: ToWolfram,
-{
-    fn to_wolfram(&self) -> WolframValue {
-        WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
-    }
+macro_rules! convert_list {
+    ($($t:tt),*) => {$(
+        impl<T> ToWolfram for $t<T>
+        where
+            T: ToWolfram,
+        {
+            fn to_wolfram(&self) -> WolframValue {
+                WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
+            }
+        }
+    )*}
 }
+convert_list![Vec, VecDeque, LinkedList, HashSet, BTreeSet];
 
-impl<T> ToWolfram for VecDeque<T>
-where
-    T: ToWolfram,
-{
-    fn to_wolfram(&self) -> WolframValue {
-        WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
-    }
-}
-
-impl<T: ToWolfram> ToWolfram for LinkedList<T> {
-    fn to_wolfram(&self) -> WolframValue {
-        WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
-    }
-}
-
-impl<T: ToWolfram> ToWolfram for HashSet<T> {
-    fn to_wolfram(&self) -> WolframValue {
-        WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
-    }
-}
-
-impl<T: ToWolfram> ToWolfram for BTreeSet<T> {
-    fn to_wolfram(&self) -> WolframValue {
-        WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
-    }
-}
-
-impl<K, V> ToWolfram for BTreeMap<K, V>
+fn rule_pair<K, V>(pair: (&K, &V)) -> (WolframValue, (WolframValue, WolframValue))
 where
     K: ToWolfram,
     V: ToWolfram,
 {
-    fn to_wolfram(&self) -> WolframValue {
-        let ref rule = WolframValue::Rule;
-        let mut map = BTreeMap::new();
-        for (k, v) in self {
-            map.insert(k.to_wolfram(), (rule.clone(), v.to_wolfram()));
-        }
-        WolframValue::Association(map)
-    }
+    (pair.0.to_wolfram(), (WolframValue::Rule, pair.1.to_wolfram()))
 }
 
-impl<K, V> ToWolfram for HashMap<K, V>
-where
-    K: ToWolfram,
-    V: ToWolfram,
-{
-    fn to_wolfram(&self) -> WolframValue {
-        let ref rule = WolframValue::Rule;
-        let mut map = BTreeMap::new();
-        for (k, v) in self {
-            map.insert(k.to_wolfram(), (rule.clone(), v.to_wolfram()));
+macro_rules! convert_map {
+    ($($t:tt),*) => {$(
+        impl<K, V> ToWolfram for $t<K, V>
+        where
+            K: ToWolfram,
+            V: ToWolfram,
+        {
+            fn to_wolfram(&self) -> WolframValue {
+                WolframValue::Association(BTreeMap::from_iter(self.into_iter().map(rule_pair)))
+            }
         }
-        WolframValue::Association(map)
-    }
+    )*}
 }
+
+convert_map![HashMap, BTreeMap];

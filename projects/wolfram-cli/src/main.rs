@@ -5,7 +5,7 @@ use clap::{App, Arg};
 
 #[derive(Debug)]
 pub enum SupportedFormat {
-    JSON,
+    JSON5,
     TOML,
     YAML,
     Pickle,

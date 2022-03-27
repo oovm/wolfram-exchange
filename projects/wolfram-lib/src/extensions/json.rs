@@ -1,4 +1,4 @@
-use crate::{ToWolfram, WolframValue};
+use crate::{Result, ToWolfram, WolframValue};
 use serde_json::{Number, Value};
 use std::collections::BTreeMap;
 
@@ -36,7 +36,14 @@ impl ToWolfram for Number {
     }
 }
 
-pub fn parse_json(input: &str) -> serde_json::Result<WolframValue> {
+/// Converts a `serde_json::Value` to a `WolframValue`.
+pub fn parse_json(input: &str) -> Result<WolframValue> {
     let v: Value = serde_json::from_str(input)?;
+    Ok(v.to_wolfram())
+}
+
+/// Converts a `serde_json::Value` to a `WolframValue`.
+pub fn parse_json5(input: &str) -> Result<WolframValue> {
+    let v: Value = json5::from_str(input)?;
     Ok(v.to_wolfram())
 }

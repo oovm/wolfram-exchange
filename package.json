@@ -8,6 +8,6 @@
         "fmt": "cargo fmt --all",
         "push": "yarn test && git push",
         "reset": "git reset Head~ --soft",
-        "pub": "cargo-publish-all --yes --allow-dirty"
+        "u": "cargo upgrade --workspace"
     }
 }

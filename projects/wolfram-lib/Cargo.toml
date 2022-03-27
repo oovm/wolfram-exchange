@@ -1,6 +1,6 @@
 [package]
 name = "wolfram_wxf"
-version = "0.6.2"
+version = "0.6.3"
 authors = ["Aster <192607617@qq.com>"]
 description = "Convert a value to the Wolfram Language WXF format."
 repository = "https://github.com/oovm/wolfram-exchange"
@@ -25,7 +25,7 @@ npy = { version = "0.4.0", optional = true }
 
 [features]
 default = ["json5", "toml"]
-json = ["serde_json"]
+json = ["serde_json", "json5"]
 yaml = ["yaml-rust"]
 pickle = ["serde-pickle"]
 numpy = ["npy"]

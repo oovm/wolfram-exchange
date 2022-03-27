@@ -25,6 +25,7 @@ impl ToWolfram for Yaml {
     }
 }
 
+/// Convert a YAML string to a Wolfram value.
 pub fn parse_yaml(input: &str) -> Result<WolframValue, ScanError> {
     let parsed = YamlLoader::load_from_str(input)?;
     let v = match parsed.len() {

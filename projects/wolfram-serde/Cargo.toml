@@ -8,12 +8,12 @@ readme = "../../README.md"
 license = "MPL-2.0"
 edition = "2018"
 
+[dependencies]
+wolfram_wxf= "0.6.2"
+
 
 [dependencies.serde]
 version = "1.0.136"
 features = ["derive"]
-
-[dependencies.wolfram_wxf]
-version = "0.6.0"
 
 

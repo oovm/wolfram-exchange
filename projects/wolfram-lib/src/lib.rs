@@ -8,11 +8,16 @@
 use num::BigInt;
 use std::collections::BTreeMap;
 
+mod error;
 mod extensions;
 mod traits;
 mod utils;
 
-pub use self::{extensions::*, utils::*};
+pub use self::{
+    error::{Result, WolframError},
+    extensions::*,
+    utils::*,
+};
 
 /// The `WolframLib` struct is the main entry point for the library.
 pub trait ToWolfram {
