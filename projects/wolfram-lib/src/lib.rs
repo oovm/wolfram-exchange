@@ -5,6 +5,7 @@ use std::{
 };
 
 pub mod objects;
+mod traits;
 pub mod utils;
 
 pub trait ToWolfram {

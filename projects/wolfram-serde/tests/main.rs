@@ -2,12 +2,10 @@ use serde::Serialize;
 use serde_wxf::WXFSerializer;
 use wolfram_wxf::ToWolfram;
 
-
 #[test]
 fn main() {
     println!("Hello Wolfram!")
 }
-
 
 #[test]
 fn test_prim() {
