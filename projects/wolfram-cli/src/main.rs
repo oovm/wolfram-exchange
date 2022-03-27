@@ -37,16 +37,16 @@ pub struct WolframExchange {
 
 fn main() -> Result<()> {
     let app = WolframExchange::parse();
-    println!("{:#?}", app);
     let value = parse_file(&app.input, app.format)?;
+    let file = app.input.as_os_str().to_string_lossy();
     if app.generate_text {
-        write_to_file(&app.input.join(".m"), value.to_string().as_bytes())?
+        write_to_file(&format!("{}.m", file), value.to_string().as_bytes())?
     }
     if app.generate_binary {
-        write_to_file(&app.input.join(".wxf"), value.to_string().as_bytes())?
+        write_to_file(&format!("{}.wxf", file), &value.to_bytes())?
     }
     if app.generate_compress {
-        write_to_file(&app.input.join(".mx"), value.to_string().as_bytes())?
+        write_to_file(&format!("{}.mx", file), &value.to_compressed())?
     }
     Ok(())
 }

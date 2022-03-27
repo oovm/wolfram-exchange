@@ -22,7 +22,7 @@ pub fn parse_file(path: &PathBuf, format: Option<String>) -> Result<WolframValue
     }
 }
 
-pub fn write_to_file(path: &PathBuf, bytes: &[u8]) -> Result<()> {
+pub fn write_to_file(path: &str, bytes: &[u8]) -> Result<()> {
     println!("Generating {:?}", path);
     let mut file = File::create(path)?;
     file.write_all(bytes)?;
