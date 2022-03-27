@@ -1,4 +1,4 @@
-use crate::{utils::SYSTEM_SYMBOLS, WolframValue};
+use crate::{WolframValue, SYSTEM_SYMBOLS};
 use flate2::{write::ZlibEncoder, Compression};
 use integer_encoding::VarInt;
 use std::{collections::BTreeSet, io::Write, mem::transmute};

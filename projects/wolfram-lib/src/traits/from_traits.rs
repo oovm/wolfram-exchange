@@ -131,27 +131,39 @@ impl ToWolfram for f64 {
     }
 }
 
-impl<T: ToWolfram + Clone> ToWolfram for Ratio<T> {
+impl<T> ToWolfram for Ratio<T>
+where
+    T: ToWolfram + Clone,
+{
     fn to_wolfram(&self) -> WolframValue {
         let r = vec![(*self.numer()).clone(), (*self.denom()).clone()];
         WolframValue::function("Rational", r)
     }
 }
 
-impl<T: ToWolfram + Copy> ToWolfram for Complex<T> {
+impl<T> ToWolfram for Complex<T>
+where
+    T: ToWolfram + Copy,
+{
     fn to_wolfram(&self) -> WolframValue {
         let r = vec![self.re, self.im];
         WolframValue::function("Complex", r)
     }
 }
 
-impl<T: ToWolfram> ToWolfram for Vec<T> {
+impl<T> ToWolfram for Vec<T>
+where
+    T: ToWolfram,
+{
     fn to_wolfram(&self) -> WolframValue {
         WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
     }
 }
 
-impl<T: ToWolfram> ToWolfram for VecDeque<T> {
+impl<T> ToWolfram for VecDeque<T>
+where
+    T: ToWolfram,
+{
     fn to_wolfram(&self) -> WolframValue {
         WolframValue::list(self.iter().map(|s| s.to_wolfram()).collect())
     }

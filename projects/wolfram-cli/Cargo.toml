@@ -3,7 +3,7 @@ name = "wxf-converter"
 version = "0.3.1"
 authors = ["Aster <192607617@qq.com>"]
 description = "Transform yaml, json, pkl files to wolfram"
-repository = "https://github.com/GalAster/wolfram-exchange"
+repository = "https://github.com/oovm/wolfram-exchange"
 documentation = "https://docs.rs/wolfram_wxf"
 readme = "Readme.md"
 license = "MPL-2.0"
@@ -19,9 +19,6 @@ clap= "3.1.6"
 [dependencies.wolfram_wxf]
 version = "0.6.0"
 default-features = false
-features = ["json", "pickle", "yaml", "toml"]
+features = ["json5", "pickle", "yaml", "toml"]
+path = "../wolfram-lib"
 
-[profile.release]
-opt-level = 'z'
-lto = true
-panic = 'abort'

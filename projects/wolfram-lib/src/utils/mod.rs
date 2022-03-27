@@ -1,13 +1,10 @@
+mod builders;
 mod encoding;
-mod from_traits;
-mod from_traits_extension;
-mod systems;
 
 use crate::{ToWolfram, WolframValue};
-pub use from_traits_extension::*;
+pub use builders::*;
 
 use num::BigInt;
-pub use systems::SYSTEM_SYMBOLS;
 
 impl WolframValue {
     pub fn symbol<S>(s: S) -> WolframValue
@@ -27,10 +24,15 @@ impl WolframValue {
         T: ToWolfram,
     {
         let head = WolframValue::symbol(head);
-        WolframValue::Function(Box::new(head), args.into())
+        let v = args.into_iter().map(|x| x.to_wolfram()).collect();
+        WolframValue::Function(Box::new(head), v)
     }
-    pub fn list(v: Vec<WolframValue>) -> WolframValue {
+    pub fn list<T>(items: Vec<T>) -> WolframValue
+    where
+        T: ToWolfram,
+    {
         let head = WolframValue::symbol("List");
+        let v = items.into_iter().map(|x| x.to_wolfram()).collect();
         WolframValue::Function(Box::new(head), v)
     }
     pub fn numeric_array() {
