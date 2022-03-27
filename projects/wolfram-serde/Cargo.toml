@@ -10,11 +10,10 @@ edition = "2018"
 
 
 [dependencies.serde]
-version = "1.0"
+version = "1.0.136"
 features = ["derive"]
 
 [dependencies.wolfram_wxf]
-version = "0.6"
-path = "../wolfram-lib"
+version = "0.6.0"
 
 

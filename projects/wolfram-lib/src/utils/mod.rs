@@ -10,25 +10,33 @@ use num::BigInt;
 pub use systems::SYSTEM_SYMBOLS;
 
 impl WolframValue {
-    pub fn symbol(s: impl Into<String>) -> WolframValue {
+    pub fn symbol<S>(s: S) -> WolframValue
+    where
+        S: Into<String>,
+    {
         WolframValue::Symbol(s.into())
     }
-    pub fn integer(i: impl Into<BigInt>) -> WolframValue {
+    pub fn integer<I>(i: I) -> WolframValue
+    where
+        I: Into<BigInt>,
+    {
         WolframValue::BigInteger(i.into())
     }
-    pub fn function<T: ToWolfram>(head: &str, args: Vec<T>) -> WolframValue {
+    pub fn function<T>(head: &str, args: Vec<T>) -> WolframValue
+    where
+        T: ToWolfram,
+    {
         let head = WolframValue::symbol(head);
-        let v = args.iter().map(|t| t.to_wolfram()).collect();
-        WolframValue::Function(Box::new(head), v)
+        WolframValue::Function(Box::new(head), args.into())
     }
     pub fn list(v: Vec<WolframValue>) -> WolframValue {
         let head = WolframValue::symbol("List");
         WolframValue::Function(Box::new(head), v)
     }
-    pub fn new_numeric_array() {
+    pub fn numeric_array() {
         unimplemented!()
     }
-    pub fn new_packed_array() {
+    pub fn packed_array() {
         unimplemented!()
     }
 }
