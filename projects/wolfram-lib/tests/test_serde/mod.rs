@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use wolfram_wxf::{ToWolfram, WolframFunction, WolframSerializer, WolframValue};
 
 #[derive(serde_derive::Serialize, serde_derive::Deserialize)]
@@ -30,6 +30,12 @@ fn fast_test() {
     assert_eq!(1u8.serialize(&serializer).unwrap(), WolframValue::Integer8(1));
     assert_eq!(('c').serialize(&serializer).unwrap(), WolframValue::String("c".to_string()));
     assert_eq!("str".serialize(&serializer).unwrap(), WolframValue::String("str".to_string()));
+    assert_eq!(Some(true).serialize(&serializer).unwrap(), WolframValue::Boolean(true));
+    assert_eq!(None::<bool>.serialize(&serializer).unwrap(), WolframValue::system_symbol("None"));
+}
+
+fn test_structures() {
+    let serializer = WolframSerializer::default();
     assert_eq!(Unit.serialize(&serializer).unwrap(), WolframFunction::global("Unit", vec![]).to_wolfram());
     assert_eq!(
         UnitTuple(1, -1).serialize(&serializer).unwrap(),

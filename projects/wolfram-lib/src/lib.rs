@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 mod error;
 mod extensions;
 mod functions;
+mod numbers;
 mod traits;
 mod utils;
 
@@ -18,6 +19,7 @@ pub use crate::{
     error::{Result, WolframError},
     extensions::*,
     functions::{WolframFunction, WolframSymbol},
+    numbers::WolframDecimal,
     traits::{object_builder::WolframSerializer, readable_writer::ReadableWriter},
     utils::*,
 };
@@ -45,29 +47,56 @@ pub trait ToWolfram {
 pub enum WolframValue {
     /// A Empty value, roughly equivalent to `Nothing` in Wolfram Language
     Skip,
-    /// Function with name, args
+    /// A wolfram function, notice the head of the function can be any [`WolframValue`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use wolfram_wxf::WolframValue;
+    /// WolframValue::function("Plus", vec![1, 2, 3]);
+    /// ```
     Function(Box<WolframFunction>),
-    /// A boolean value in Rust side, notice that `True` and `False` are symbols in Wolfram Language
+    /// A wolfram boolean, notice that `True` and `False` are symbols in Wolfram Language
+    ///
+    /// ```
+    /// # use wolfram_wxf::WolframValue;
+    /// WolframValue::function("Plus", vec![1, 2, 3]);
+    /// ```
     Boolean(bool),
     /// A wolfram string
+    ///
+    /// ```
+    /// # use wolfram_wxf::WolframValue;
+    /// WolframValue::function("Plus", vec![1, 2, 3]);
+    /// ```
     String(String),
-    /// A [`WolframBool`] value.
+    /// A wolfram bytes
+    ///
+    /// ```
+    /// # use wolfram_wxf::WolframValue;
+    /// WolframValue::function("Plus", vec![1, 2, 3]);
+    /// ```
     Bytes(Vec<u8>),
-    /// A [WolframSymbol] value.
+    /// A wolfram symbol
+    ///
+    /// ```
+    /// # use wolfram_wxf::WolframValue;
+    /// WolframValue::function("Plus", vec![1, 2, 3]);
+    /// ```
     Symbol(Box<WolframSymbol>),
-    /// A [`WolframBool`] value.
+    /// A wolfram number in range `[-128, 127]`
     Integer8(i8),
-    /// A [`WolframBool`] value.
+    /// A wolfram number in range `[-32768, 32767]`
     Integer16(i16),
-    /// A [`WolframBool`] value.
+    /// A wolfram number in range `[-2147483648, 2147483647]`
     Integer32(i32),
-    /// A [`WolframBool`] value.
+    /// A wolfram number in range `[-9223372036854775808, 9223372036854775807]`
     Integer64(i64),
-    /// A [`WolframBool`] value.
+    /// A wolfram integer in arbitrary precision
     BigInteger(BigInt),
     /// Do not use `f64`, because partial order cannot be defined
     Decimal64([u8; 8]),
-    /// A [`WolframBool`] value.
+    /// A wolfram decimal in arbitrary precision
     BigDecimal(String),
     /// Need to optimize
     PackedArray(Vec<WolframValue>),

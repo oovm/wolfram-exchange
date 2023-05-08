@@ -1,6 +1,6 @@
 [package]
 name = "wolfram_wxf"
-version = "0.6.4"
+version = "0.6.5"
 authors = ["Aster <192607617@qq.com>"]
 description = "Convert a value to the Wolfram Language WXF format."
 repository = "https://github.com/oovm/wolfram-exchange"
