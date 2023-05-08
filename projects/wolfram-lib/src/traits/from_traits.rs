@@ -14,7 +14,7 @@ impl ToWolfram for WolframValue {
 
 impl ToWolfram for bool {
     fn to_wolfram(&self) -> WolframValue {
-        if *self { WolframValue::symbol("True") } else { WolframValue::symbol("False") }
+        if *self { WolframValue::system_symbol("True") } else { WolframValue::system_symbol("False") }
     }
 }
 

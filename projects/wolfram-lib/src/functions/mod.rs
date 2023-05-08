@@ -1,16 +1,45 @@
 use crate::{ToWolfram, WolframValue};
+use std::fmt::{Debug, Display, Formatter};
+
+mod display;
+
+/// A symbol in the Wolfram Language.
+#[derive(Clone, PartialEq, Eq, Ord, PartialOrd)]
+pub struct WolframSymbol {
+    namespace: String,
+    name: String,
+}
+
+impl WolframSymbol {
+    /// Creates a new [`WolframSymbol`] with the given name.
+    pub fn global<S>(name: S) -> Self
+    where
+        S: ToString,
+    {
+        let name = name.to_string();
+        debug_assert!(Self::is_valid(name.as_ref()));
+        Self { namespace: "Global".to_string(), name }
+    }
+    /// Creates a new [`WolframSymbol`] with the given name.
+    pub fn system<S>(name: S) -> Self
+    where
+        S: ToString,
+    {
+        let name = name.to_string();
+        debug_assert!(Self::is_valid(name.as_ref()));
+        Self { namespace: String::new(), name }
+    }
+    /// Creates a new [`WolframSymbol`] with the given name.
+    pub fn is_valid(name: &str) -> bool {
+        name.chars().all(|c| c.is_ascii_alphanumeric() || c == '`')
+    }
+}
 
 /// f[x, y, z, ...]
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct WolframFunction {
     head: WolframValue,
     rest: Vec<WolframValue>,
-}
-
-impl ToWolfram for WolframFunction {
-    fn to_wolfram(&self) -> WolframValue {
-        WolframValue::Function(Box::new(self.clone()))
-    }
 }
 
 impl WolframFunction {
@@ -36,7 +65,7 @@ impl WolframFunction {
         S: ToString,
         I: IntoIterator<Item = WolframValue>,
     {
-        Self { head: WolframValue::Symbol(name.to_string()), rest: arguments.into_iter().collect() }
+        Self { head: WolframSymbol::global(name).to_wolfram(), rest: arguments.into_iter().collect() }
     }
     /// Creates a new [`WolframFunction`] with the given name and arguments.
     pub fn system<S, I>(name: S, arguments: I) -> Self
@@ -44,7 +73,7 @@ impl WolframFunction {
         S: ToString,
         I: IntoIterator<Item = WolframValue>,
     {
-        Self { head: WolframValue::Symbol(name.to_string()), rest: arguments.into_iter().collect() }
+        Self { head: WolframSymbol::system(name).to_wolfram(), rest: arguments.into_iter().collect() }
     }
     /// Creates a new [`WolframFunction`] with the given name and arguments.
     pub fn get_head(&self) -> &WolframValue {

@@ -1,7 +1,7 @@
-use crate::{SYSTEM_SYMBOLS, ToWolfram, WolframFunction, WolframValue};
+use crate::{ToWolfram, WolframFunction, WolframSymbol, WolframValue};
 use flate2::{write::ZlibEncoder, Compression};
 use integer_encoding::VarInt;
-use std::{collections::BTreeSet, io::Write, mem::transmute};
+use std::{io::Write, mem::transmute};
 
 impl WolframValue {
     /// Encode a value into a byte vector.
@@ -37,12 +37,8 @@ impl WolframValue {
     pub fn write_bytes(&self, out: &mut Vec<u8>) {
         match self {
             WolframValue::Skip => (),
-            WolframValue::Function(v) => {
-                v.write_bytes_inner(out)
-            }
-            WolframValue::Boolean(v) => {
-                v.to_wolfram().write_bytes(out)
-            }
+            WolframValue::Function(v) => v.write_bytes_inner(out),
+            WolframValue::Boolean(v) => v.to_wolfram().write_bytes(out),
             WolframValue::String(s) => {
                 let len = s.len().encode_var_vec();
                 out.push(b'S');
@@ -55,13 +51,7 @@ impl WolframValue {
                 out.extend_from_slice(&len);
                 out.extend_from_slice(&v);
             }
-            WolframValue::Symbol(symbol) => {
-                let s = standardized_symbol_name(symbol);
-                let len = symbol.len().encode_var_vec();
-                out.push(b's');
-                out.extend_from_slice(&len);
-                out.extend_from_slice(s.as_bytes());
-            }
+            WolframValue::Symbol(symbol) => symbol.write_bytes_inner(out),
             WolframValue::Integer8(n) => {
                 out.push(b'C');
                 let le: [u8; 1] = unsafe { transmute(n.to_le()) };
@@ -122,13 +112,12 @@ impl WolframFunction {
     }
 }
 
-fn standardized_symbol_name(input: &str) -> String {
-    if input.contains('`') {
-        return format!("{}", input);
+impl WolframSymbol {
+    fn write_bytes_inner(&self, out: &mut Vec<u8>) {
+        let s = format!("{:?}", self);
+        let len = s.len().encode_var_vec();
+        out.push(b's');
+        out.extend_from_slice(&len);
+        out.extend_from_slice(s.as_bytes());
     }
-    let mut set = BTreeSet::new();
-    for sys in SYSTEM_SYMBOLS.iter() {
-        set.insert(*sys);
-    }
-    if set.contains(input) { format!("{}", input) } else { format!("Global`{}", input) }
 }

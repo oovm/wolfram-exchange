@@ -1,19 +1,28 @@
 mod builders;
 mod encoding;
 
-use crate::{ToWolfram, WolframFunction, WolframValue};
+use crate::{ToWolfram, WolframFunction, WolframSymbol, WolframValue};
 pub use builders::*;
 
 use num::BigInt;
 
 impl WolframValue {
     /// Creates a [Symbol] value
-    pub fn symbol<S>(s: S) -> WolframValue
+    pub fn system_symbol<S>(s: S) -> WolframValue
     where
         S: Into<String>,
     {
-        WolframValue::Symbol(s.into())
+        WolframSymbol::system(s.into()).to_wolfram()
     }
+
+    /// Creates a [Symbol] value
+    pub fn global_symbol<S>(s: S) -> WolframValue
+    where
+        S: Into<String>,
+    {
+        WolframSymbol::global(s.into()).to_wolfram()
+    }
+
     /// Creates a [Integer] value
     pub fn integer<I>(i: I) -> WolframValue
     where

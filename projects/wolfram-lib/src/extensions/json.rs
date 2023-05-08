@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 impl ToWolfram for Value {
     fn to_wolfram(&self) -> WolframValue {
         match self {
-            Value::Null => WolframValue::symbol("None"),
+            Value::Null => WolframValue::system_symbol("None"),
             Value::Bool(o) => o.to_wolfram(),
             Value::Number(n) => n.to_wolfram(),
             Value::String(s) => s.to_wolfram(),

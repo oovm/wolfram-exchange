@@ -17,7 +17,7 @@ mod utils;
 pub use crate::{
     error::{Result, WolframError},
     extensions::*,
-    functions::WolframFunction,
+    functions::{WolframFunction, WolframSymbol},
     traits::object_builder::WolframSerializer,
     utils::*,
 };
@@ -53,8 +53,8 @@ pub enum WolframValue {
     String(String),
     /// A [`WolframBool`] value.
     Bytes(Vec<u8>),
-    /// A [`WolframBool`] value.
-    Symbol(String),
+    /// A [WolframSymbol] value.
+    Symbol(Box<WolframSymbol>),
     /// A [`WolframBool`] value.
     Integer8(i8),
     /// A [`WolframBool`] value.

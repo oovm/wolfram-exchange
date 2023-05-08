@@ -5,7 +5,7 @@ use yaml_rust::{ScanError, Yaml, YamlLoader};
 impl ToWolfram for Yaml {
     fn to_wolfram(&self) -> WolframValue {
         match self {
-            Yaml::Null => WolframValue::symbol("None"),
+            Yaml::Null => WolframValue::system_symbol("None"),
             Yaml::Real(n) => n.parse::<f64>().unwrap_or(0.0).to_wolfram(),
             Yaml::Integer(n) => n.to_wolfram(),
             Yaml::String(s) => s.to_wolfram(),
@@ -20,7 +20,7 @@ impl ToWolfram for Yaml {
                 WolframValue::Association(map)
             }
             Yaml::Alias(o) => o.to_wolfram(),
-            Yaml::BadValue => WolframValue::symbol("Null"),
+            Yaml::BadValue => WolframValue::system_symbol("Null"),
         }
     }
 }
@@ -35,7 +35,7 @@ impl From<ScanError> for WolframError {
 pub fn parse_yaml(input: &str) -> Result<WolframValue> {
     let parsed = YamlLoader::load_from_str(input)?;
     let v = match parsed.len() {
-        0 => WolframValue::symbol("None"),
+        0 => WolframValue::system_symbol("None"),
         1 => parsed[0].to_wolfram(),
         _ => parsed.to_wolfram(),
     };

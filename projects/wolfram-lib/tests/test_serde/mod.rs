@@ -5,12 +5,12 @@ use wolfram_wxf::{ToWolfram, WolframFunction, WolframSerializer, WolframValue};
 pub struct Unit;
 
 #[derive(serde_derive::Serialize, serde_derive::Deserialize)]
-pub struct UnitTuple(u8, u8);
+pub struct UnitTuple(i32, i32);
 
 #[derive(serde_derive::Serialize, serde_derive::Deserialize)]
 pub struct UnitStruct {
-    x: u8,
-    y: u8,
+    x: i32,
+    y: i32,
 }
 
 #[test]
@@ -25,11 +25,17 @@ fn fast_test() {
     assert_eq!("str".serialize(&serializer).unwrap(), WolframValue::String("str".to_string()));
     assert_eq!(Unit.serialize(&serializer).unwrap(), WolframFunction::global("Unit", vec![]).to_wolfram());
     assert_eq!(
-        UnitTuple(127, 128).serialize(&serializer).unwrap(),
-        WolframFunction::global("UnitTuple", vec![127u8.serialize(&serializer).unwrap(), 128u8.serialize(&serializer).unwrap()]).to_wolfram()
+        UnitTuple(1, -1).serialize(&serializer).unwrap(),
+        WolframFunction::global("UnitTuple", vec![1.serialize(&serializer).unwrap(), (-1).serialize(&serializer).unwrap()]).to_wolfram()
     );
     assert_eq!(
         UnitStruct { x: 0, y: 0 }.serialize(&serializer).unwrap(),
-        WolframFunction::global("UnitStruct", vec![WolframValue::pair("x", 127u8, false), WolframValue::pair("x", 127u8, false)]).to_wolfram()
+        WolframFunction::global("UnitStruct", vec![WolframValue::pair("x", 0, false), WolframValue::pair("x", 0, false)]).to_wolfram()
     );
+}
+
+#[test]
+fn test2() {
+    let f = WolframFunction::global("Unit", vec![]);
+    println!("{:?}", f);
 }

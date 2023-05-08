@@ -10,8 +10,8 @@ use wolfram_wxf::{ToWolfram, WolframValue};
 #[test]
 fn test_none() {
     //Normal@BinarySerialize[System`None]
-    assert_eq!(WolframValue::symbol("None").to_bytes(), [56, 58, 115, 4, 78, 111, 110, 101]);
-    assert_eq!(WolframValue::symbol("None").to_string(), "None");
+    assert_eq!(WolframValue::system_symbol("None").to_bytes(), [56, 58, 115, 4, 78, 111, 110, 101]);
+    assert_eq!(WolframValue::system_symbol("None").to_string(), "None");
 }
 
 #[test]

@@ -4,7 +4,7 @@ use serde_pickle::{HashableValue, Value};
 impl ToWolfram for Value {
     fn to_wolfram(&self) -> WolframValue {
         match self {
-            Value::None => WolframValue::symbol("None"),
+            Value::None => WolframValue::system_symbol("None"),
             Value::Bool(b) => b.to_wolfram(),
             Value::I64(i) => i.to_wolfram(),
             Value::Int(i) => i.to_wolfram(),
@@ -23,7 +23,7 @@ impl ToWolfram for Value {
 impl ToWolfram for HashableValue {
     fn to_wolfram(&self) -> WolframValue {
         match self {
-            HashableValue::None => WolframValue::symbol("None"),
+            HashableValue::None => WolframValue::system_symbol("None"),
             HashableValue::Bool(b) => b.to_wolfram(),
             HashableValue::I64(i) => i.to_wolfram(),
             HashableValue::Int(i) => i.to_wolfram(),
