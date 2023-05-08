@@ -18,6 +18,7 @@ pub use crate::{
     error::{Result, WolframError},
     extensions::*,
     functions::WolframFunction,
+    traits::object_builder::WolframSerializer,
     utils::*,
 };
 

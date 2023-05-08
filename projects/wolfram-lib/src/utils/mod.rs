@@ -37,6 +37,15 @@ impl WolframValue {
         let v = items.into_iter().map(|x| x.to_wolfram());
         WolframFunction::system("List", v).to_wolfram()
     }
+    /// Creates a [Association] from sequence of key-value pairs
+    pub fn pair<K, V>(key: K, value: V, delayed: bool) -> WolframValue
+    where
+        K: ToWolfram,
+        V: ToWolfram,
+    {
+        let name = if delayed { "RuleDelayed" } else { "Rule" };
+        WolframFunction::system(name, vec![key.to_wolfram(), value.to_wolfram()]).to_wolfram()
+    }
     /// Creates a [NumericArray]
     pub fn numeric_array() {
         unimplemented!()

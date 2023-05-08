@@ -3,6 +3,7 @@ mod containers;
 mod encoding;
 mod functions;
 mod numbers;
+mod test_serde;
 
 use wolfram_wxf::{ToWolfram, WolframValue};
 

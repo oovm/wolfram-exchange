@@ -1,5 +1,4 @@
-use crate::{WolframError, WolframValue};
-use num::BigInt;
+use crate::{ToWolfram, WolframError, WolframFunction, WolframValue};
 use serde::{
     ser::{
         Error, SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple, SerializeTupleStruct, SerializeTupleVariant,
@@ -8,17 +7,14 @@ use serde::{
 };
 use std::fmt::Display;
 
+/// A serializer for the Wolfram Language.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct WolframSerializer {}
 
-#[test]
-fn fast_test() {
-    let serializer = WolframSerializer {};
-
-    assert_eq!(serializer.serialize_bool(true).unwrap(), WolframValue::Boolean(true));
-    assert_eq!(serializer.serialize_bool(false).unwrap(), WolframValue::Boolean(false));
-    assert_eq!(serializer.serialize_i8(-1).unwrap(), WolframValue::Integer8(-1));
-    assert_eq!(serializer.serialize_u8(1).unwrap(), WolframValue::Integer8(1));
+impl Default for WolframSerializer {
+    fn default() -> Self {
+        Self {}
+    }
 }
 
 impl Error for WolframError {
@@ -27,17 +23,26 @@ impl Error for WolframError {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SerializerToAny {}
 
-impl Serializer for WolframSerializer {
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SerializeAsFunction<'i> {
+    name_space: &'static str,
+    name: &'static str,
+    body: Vec<WolframValue>,
+    config: &'i WolframSerializer,
+}
+
+impl<'i> Serializer for &'i WolframSerializer {
     type Ok = WolframValue;
     type Error = WolframError;
     type SerializeSeq = SerializerToAny;
     type SerializeTuple = SerializerToAny;
-    type SerializeTupleStruct = SerializerToAny;
+    type SerializeTupleStruct = SerializeAsFunction<'i>;
     type SerializeTupleVariant = SerializerToAny;
     type SerializeMap = SerializerToAny;
-    type SerializeStruct = SerializerToAny;
+    type SerializeStruct = SerializeAsFunction<'i>;
     type SerializeStructVariant = SerializerToAny;
 
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
@@ -73,7 +78,7 @@ impl Serializer for WolframSerializer {
     }
 
     fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
-        if v > 9223372036854775807 { Ok(WolframValue::Integer64(v as i64)) } else { Ok(WolframValue::BigInteger(BigInt::from(v))) }
+        if v > 9223372036854775807 { Ok(WolframValue::Integer64(v as i64)) } else { Ok(WolframValue::integer(v)) }
     }
 
     fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
@@ -85,11 +90,11 @@ impl Serializer for WolframSerializer {
     }
 
     fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframValue::String(v.to_string()))
     }
 
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframValue::String(v.to_string()))
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
@@ -112,7 +117,7 @@ impl Serializer for WolframSerializer {
     }
 
     fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframFunction::system(name, vec![]).to_wolfram())
     }
 
     fn serialize_unit_variant(self, name: &'static str, variant_index: u32, variant: &'static str) -> Result<Self::Ok, Self::Error> {
@@ -148,7 +153,7 @@ impl Serializer for WolframSerializer {
     }
 
     fn serialize_tuple_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
-        todo!()
+        Ok(SerializeAsFunction { name_space: "", name, body: Vec::with_capacity(len), config: self })
     }
 
     fn serialize_tuple_variant(
@@ -166,7 +171,7 @@ impl Serializer for WolframSerializer {
     }
 
     fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct, Self::Error> {
-        todo!()
+        Ok(SerializeAsFunction { name_space: "", name, body: Vec::with_capacity(len), config: self })
     }
 
     fn serialize_struct_variant(
@@ -182,10 +187,10 @@ impl Serializer for WolframSerializer {
         false
     }
     fn serialize_i128(self, v: i128) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframValue::integer(v))
     }
     fn serialize_u128(self, v: u128) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframValue::integer(v))
     }
 }
 
@@ -243,7 +248,7 @@ impl SerializeMap for SerializerToAny {
     }
 }
 
-impl SerializeTupleStruct for SerializerToAny {
+impl<'i> SerializeTupleStruct for SerializeAsFunction<'i> {
     type Ok = WolframValue;
     type Error = WolframError;
 
@@ -251,13 +256,16 @@ impl SerializeTupleStruct for SerializerToAny {
     where
         T: Serialize,
     {
-        todo!()
+        let item = value.serialize(self.config)?;
+        self.body.push(item);
+        Ok(())
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframFunction::global(self.name, self.body).to_wolfram())
     }
 }
+
 impl SerializeTupleVariant for SerializerToAny {
     type Ok = WolframValue;
     type Error = WolframError;
@@ -274,7 +282,7 @@ impl SerializeTupleVariant for SerializerToAny {
     }
 }
 
-impl SerializeStruct for SerializerToAny {
+impl<'i> SerializeStruct for SerializeAsFunction<'i> {
     type Ok = WolframValue;
     type Error = WolframError;
 
@@ -282,11 +290,15 @@ impl SerializeStruct for SerializerToAny {
     where
         T: Serialize,
     {
-        todo!()
+        let key = WolframValue::String(key.to_string());
+        let value = value.serialize(self.config)?;
+        let pair = WolframValue::pair(key, value, false);
+        self.body.push(pair);
+        Ok(())
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframFunction::global(self.name, self.body).to_wolfram())
     }
 }
 
