@@ -1,4 +1,4 @@
-use crate::{ToWolfram, WolframValue};
+use crate::{ToWolfram, WolframRule, WolframValue};
 use num::{bigint::Sign, rational::Ratio, BigInt, BigUint, Complex};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque},
@@ -182,12 +182,12 @@ macro_rules! convert_list {
 }
 convert_list![Vec, VecDeque, LinkedList, HashSet, BTreeSet];
 
-fn rule_pair<K, V>(pair: (&K, &V)) -> (WolframValue, (WolframValue, WolframValue))
+fn rule_pair<K, V>(pair: (&K, &V)) -> (WolframValue, (WolframRule, WolframValue))
 where
     K: ToWolfram,
     V: ToWolfram,
 {
-    (pair.0.to_wolfram(), (WolframValue::Rule, pair.1.to_wolfram()))
+    (pair.0.to_wolfram(), (WolframRule::Rule, pair.1.to_wolfram()))
 }
 
 macro_rules! convert_map {

@@ -1,11 +1,11 @@
-use crate::{ToWolfram, WolframError, WolframFunction, WolframValue};
+use crate::{ToWolfram, WolframError, WolframFunction, WolframRule, WolframValue};
 use serde::{
     ser::{
         Error, SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple, SerializeTupleStruct, SerializeTupleVariant,
     },
     Serialize, Serializer,
 };
-use std::fmt::Display;
+use std::{collections::BTreeMap, fmt::Display, mem::take};
 
 /// A serializer for the Wolfram Language.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -31,6 +31,8 @@ pub struct SerializerAsList<'i> {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SerializerAsAssociation<'i> {
+    key: WolframValue,
+    body: BTreeMap<WolframValue, (WolframRule, WolframValue)>,
     config: &'i WolframSerializer,
 }
 
@@ -170,8 +172,8 @@ impl<'i> Serializer for &'i WolframSerializer {
         Ok(SerializeAsFunction { name_space: name, name: variant, body: Vec::with_capacity(n), config: self })
     }
 
-    fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
-        todo!()
+    fn serialize_map(self, _: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
+        Ok(SerializerAsAssociation { key: WolframValue::Skip, body: BTreeMap::default(), config: self })
     }
 
     fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct, Self::Error> {
@@ -239,18 +241,23 @@ impl<'i> SerializeMap for SerializerAsAssociation<'i> {
     where
         T: Serialize,
     {
-        todo!()
+        let item = key.serialize(self.config)?;
+        self.key = item;
+        Ok(())
     }
 
     fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
     where
         T: Serialize,
     {
-        todo!()
+        let key = take(&mut self.key);
+        let item = value.serialize(self.config)?;
+        self.body.insert(key, (WolframRule::Rule, item));
+        Ok(())
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframValue::Association(self.body))
     }
 }
 

@@ -53,27 +53,36 @@ impl ReadableBuffer {
                 let v: Vec<String> = dict.iter().map(|(k, (r, v))| format!("{}{}{}", k, r, v)).collect();
                 write!(self.buffer, "<|{}|>", v.join(","))
             }
-            WolframValue::Rule => write!(self.buffer, "->"),
-            WolframValue::RuleDelayed => write!(self.buffer, ":>"),
         }
     }
     pub fn write_function(&mut self, function: &WolframFunction) -> std::fmt::Result {
         let head = function.get_head();
         let args = function.get_rest();
-        let v: Vec<String> = args.iter().map(|v| v.to_string()).collect();
         self.indent();
         if head.to_string() == "List" {
-            write!(self.buffer, "{{{}}}", v.join(","))?
+            self.write_items(args, '{', '}')?;
         }
         else {
-            write!(self.buffer, "{}[{}]", head.to_string(), v.join(","))?
+            self.buffer.write_str(&head.to_string())?;
+            self.write_items(args, '[', ']')?;
         }
         self.dedent();
         Ok(())
     }
+    pub fn write_items(&mut self, items: &[WolframValue], lhs: char, rhs: char) -> std::fmt::Result {
+        self.buffer.write_char(lhs)?;
+        for item in items {
+            self.write_value(item)?;
+            self.buffer.write_char(',')?;
+            self.write_new_line()?;
+        }
+        self.buffer.write_char(rhs)?;
+        Ok(())
+    }
+
     pub fn write_new_line(&mut self) -> std::fmt::Result {
-        self.buffer.write_char('\n')?;
         if self.config.pretty {
+            self.buffer.write_char('\n')?;
             for _ in 0..self.indent_level {
                 self.buffer.write_str(self.config.indent_string)?;
             }

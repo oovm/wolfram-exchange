@@ -9,6 +9,7 @@ use num::BigInt;
 use ordered_float::OrderedFloat;
 use std::collections::BTreeMap;
 
+mod associations;
 mod error;
 mod extensions;
 mod functions;
@@ -17,6 +18,7 @@ mod traits;
 mod utils;
 
 pub use crate::{
+    associations::{WolframPair, WolframRule},
     error::{Result, WolframError},
     extensions::*,
     functions::{WolframFunction, WolframSymbol},
@@ -103,9 +105,11 @@ pub enum WolframValue {
     /// Need to optimize
     NumericArray(Vec<WolframValue>),
     /// Record with key, rule, value
-    Association(BTreeMap<WolframValue, (WolframValue, WolframValue)>),
-    /// Represents the [->](https://reference.wolfram.com/language/ref/Rule.html) symbol.
-    Rule,
-    /// Represents the [:>](https://reference.wolfram.com/language/ref/RuleDelayed.html) symbol.
-    RuleDelayed,
+    Association(BTreeMap<WolframValue, (WolframRule, WolframValue)>),
+}
+
+impl Default for WolframValue {
+    fn default() -> Self {
+        Self::Skip
+    }
 }

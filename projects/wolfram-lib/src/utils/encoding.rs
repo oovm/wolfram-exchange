@@ -1,4 +1,4 @@
-use crate::{ToWolfram, WolframFunction, WolframSymbol, WolframValue};
+use crate::{WolframFunction, WolframSymbol, WolframValue};
 use flate2::{write::ZlibEncoder, Compression};
 use integer_encoding::VarInt;
 use std::{io::Write, mem::transmute};
@@ -90,13 +90,11 @@ impl WolframValue {
                 out.push(b'A');
                 out.extend_from_slice(&dict.len().encode_var_vec());
                 for (k, (r, v)) in dict {
-                    r.write_bytes(out);
+                    out.push(r.as_byte());
                     k.write_bytes(out);
                     v.write_bytes(out);
                 }
             }
-            WolframValue::Rule => out.push(b'-'),
-            WolframValue::RuleDelayed => out.push(b':'),
         }
     }
 }
