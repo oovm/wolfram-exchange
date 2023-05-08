@@ -6,6 +6,7 @@
 #![doc(html_favicon_url = "https://avatars.githubusercontent.com/u/11549616")]
 
 use num::BigInt;
+use ordered_float::OrderedFloat;
 use std::collections::BTreeMap;
 
 mod error;
@@ -19,7 +20,6 @@ pub use crate::{
     error::{Result, WolframError},
     extensions::*,
     functions::{WolframFunction, WolframSymbol},
-    numbers::WolframDecimal,
     traits::{object_builder::WolframSerializer, readable_writer::ReadableWriter},
     utils::*,
 };
@@ -95,7 +95,7 @@ pub enum WolframValue {
     /// A wolfram integer in arbitrary precision
     BigInteger(BigInt),
     /// Do not use `f64`, because partial order cannot be defined
-    Decimal64([u8; 8]),
+    Decimal64(OrderedFloat<f64>),
     /// A wolfram decimal in arbitrary precision
     BigDecimal(String),
     /// Need to optimize

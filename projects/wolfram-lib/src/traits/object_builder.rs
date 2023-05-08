@@ -23,8 +23,16 @@ impl Error for WolframError {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct SerializerToAny {}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SerializerAsList<'i> {
+    body: Vec<WolframValue>,
+    config: &'i WolframSerializer,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SerializerAsAssociation<'i> {
+    config: &'i WolframSerializer,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SerializeAsFunction<'i> {
@@ -37,11 +45,11 @@ pub struct SerializeAsFunction<'i> {
 impl<'i> Serializer for &'i WolframSerializer {
     type Ok = WolframValue;
     type Error = WolframError;
-    type SerializeSeq = SerializerToAny;
-    type SerializeTuple = SerializerToAny;
+    type SerializeSeq = SerializerAsList<'i>;
+    type SerializeTuple = SerializerAsList<'i>;
     type SerializeTupleStruct = SerializeAsFunction<'i>;
     type SerializeTupleVariant = SerializeAsFunction<'i>;
-    type SerializeMap = SerializerToAny;
+    type SerializeMap = SerializerAsAssociation<'i>;
     type SerializeStruct = SerializeAsFunction<'i>;
     type SerializeStructVariant = SerializeAsFunction<'i>;
 
@@ -82,11 +90,11 @@ impl<'i> Serializer for &'i WolframSerializer {
     }
 
     fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
-        self.serialize_f64(v as f64)
+        Ok(WolframValue::from(v))
     }
 
     fn serialize_f64(self, v: f64) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframValue::from(v))
     }
 
     fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
@@ -98,7 +106,7 @@ impl<'i> Serializer for &'i WolframSerializer {
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframValue::Bytes(v.to_vec()))
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
@@ -128,20 +136,16 @@ impl<'i> Serializer for &'i WolframSerializer {
     where
         T: Serialize,
     {
-        todo!()
+        let value = value.serialize(self)?;
+        Ok(WolframFunction::global(name, vec![value]).to_wolfram())
     }
 
-    fn serialize_newtype_variant<T: ?Sized>(
-        self,
-        name: &'static str,
-        variant_index: u32,
-        variant: &'static str,
-        value: &T,
-    ) -> Result<Self::Ok, Self::Error>
+    fn serialize_newtype_variant<T: ?Sized>(self, name: &'static str, _: u32, variant: &'static str, value: &T) -> Result<Self::Ok, Self::Error>
     where
         T: Serialize,
     {
-        todo!()
+        let value = value.serialize(self)?;
+        Ok(WolframFunction::namespace(name, variant, vec![value]).to_wolfram())
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
@@ -149,7 +153,7 @@ impl<'i> Serializer for &'i WolframSerializer {
     }
 
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
-        todo!()
+        Ok(SerializerAsList { body: Vec::with_capacity(len), config: self })
     }
 
     fn serialize_tuple_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
@@ -194,7 +198,7 @@ impl<'i> Serializer for &'i WolframSerializer {
     }
 }
 
-impl SerializeSeq for SerializerToAny {
+impl<'i> SerializeSeq for SerializerAsList<'i> {
     type Ok = WolframValue;
     type Error = WolframError;
 
@@ -210,7 +214,7 @@ impl SerializeSeq for SerializerToAny {
     }
 }
 
-impl SerializeTuple for SerializerToAny {
+impl<'i> SerializeTuple for SerializerAsList<'i> {
     type Ok = WolframValue;
     type Error = WolframError;
 
@@ -218,14 +222,17 @@ impl SerializeTuple for SerializerToAny {
     where
         T: Serialize,
     {
-        todo!()
+        let item = value.serialize(self.config)?;
+        self.body.push(item);
+        Ok(())
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframValue::list(self.body))
     }
 }
-impl SerializeMap for SerializerToAny {
+
+impl<'i> SerializeMap for SerializerAsAssociation<'i> {
     type Ok = WolframValue;
     type Error = WolframError;
 

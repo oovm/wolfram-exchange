@@ -33,6 +33,11 @@ impl WolframSymbol {
         Self { namespace: "Global".to_string(), name }
     }
     /// Creates a new [`WolframSymbol`] with the given name.
+    pub fn boolean(bool: bool) -> Self {
+        Self::system(if bool { "True" } else { "False" })
+    }
+
+    /// Creates a new [`WolframSymbol`] with the given name.
     pub fn system<S>(name: S) -> Self
     where
         S: ToString,

@@ -45,7 +45,7 @@ impl ReadableBuffer {
             WolframValue::Integer32(i) => write!(self.buffer, "{}", i),
             WolframValue::Integer64(i) => write!(self.buffer, "{}", i),
             WolframValue::BigInteger(i) => write!(self.buffer, "{}", i),
-            WolframValue::Decimal64(d) => write!(self.buffer, "{}`", f64::from_le_bytes(*d)),
+            WolframValue::Decimal64(d) => write!(self.buffer, "{}`", d.0),
             WolframValue::BigDecimal(d) => write!(self.buffer, "{}", d),
             WolframValue::PackedArray(_) => unimplemented!(),
             WolframValue::NumericArray(_) => unimplemented!(),

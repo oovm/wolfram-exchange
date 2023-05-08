@@ -2,19 +2,12 @@ use crate::{ToWolfram, WolframValue};
 use num::{bigint::Sign, rational::Ratio, BigInt, BigUint, Complex};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque},
-    intrinsics::transmute,
     time::{Duration, Instant, SystemTime},
 };
 
 impl ToWolfram for WolframValue {
     fn to_wolfram(&self) -> WolframValue {
         self.clone()
-    }
-}
-
-impl ToWolfram for bool {
-    fn to_wolfram(&self) -> WolframValue {
-        if *self { WolframValue::system_symbol("True") } else { WolframValue::system_symbol("False") }
     }
 }
 
@@ -122,13 +115,13 @@ impl ToWolfram for BigInt {
 
 impl ToWolfram for f32 {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::Decimal64(unsafe { transmute::<_, [u8; 8]>(*self as f64) })
+        WolframValue::from(*self)
     }
 }
 
 impl ToWolfram for f64 {
     fn to_wolfram(&self) -> WolframValue {
-        WolframValue::Decimal64(unsafe { transmute::<_, [u8; 8]>(*self) })
+        WolframValue::from(*self)
     }
 }
 

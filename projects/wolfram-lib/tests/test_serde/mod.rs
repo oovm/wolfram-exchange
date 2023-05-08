@@ -34,6 +34,14 @@ fn fast_test() {
     assert_eq!(None::<bool>.serialize(&serializer).unwrap(), WolframValue::system_symbol("None"));
 }
 
+#[test]
+fn fast_container() {
+    let serializer = WolframSerializer::default();
+    assert_eq!([true, false].serialize(&serializer).unwrap(), WolframValue::list(vec![true, false]));
+    assert_eq!((false, true).serialize(&serializer).unwrap(), WolframValue::list(vec![false, true]));
+}
+
+#[test]
 fn test_structures() {
     let serializer = WolframSerializer::default();
     assert_eq!(Unit.serialize(&serializer).unwrap(), WolframFunction::global("Unit", vec![]).to_wolfram());

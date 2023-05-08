@@ -38,7 +38,7 @@ impl WolframValue {
         match self {
             WolframValue::Skip => (),
             WolframValue::Function(v) => v.write_bytes_inner(out),
-            WolframValue::Boolean(v) => v.to_wolfram().write_bytes(out),
+            WolframValue::Boolean(v) => WolframSymbol::boolean(*v).write_bytes_inner(out),
             WolframValue::String(s) => {
                 let len = s.len().encode_var_vec();
                 out.push(b'S');
@@ -81,7 +81,7 @@ impl WolframValue {
             }
             WolframValue::Decimal64(s) => {
                 out.push(b'r');
-                out.extend_from_slice(s);
+                out.extend_from_slice(&s.0.to_le_bytes());
             }
             WolframValue::BigDecimal(_) => unimplemented!(),
             WolframValue::PackedArray(_) => unimplemented!(),
