@@ -4,7 +4,7 @@ use std::{
     fmt::{Debug, Formatter},
 };
 
-mod display;
+mod convert;
 
 /// A [`WolframValue`] is a value that can be converted to a [`WolframValue`]
 #[derive(Clone)]
@@ -19,23 +19,6 @@ enum FloatRepr {
     Safe(f64),
     BigDecimal(String),
     NegativeInfinity,
-}
-
-impl From<f32> for WolframDecimal {
-    fn from(value: f32) -> Self {
-        if value == f32::INFINITY {
-            WolframDecimal { repr: FloatRepr::PositiveInfinity }
-        }
-        else if value == f32::NEG_INFINITY {
-            WolframDecimal { repr: FloatRepr::NegativeInfinity }
-        }
-        else if value.is_nan() {
-            WolframDecimal { repr: FloatRepr::Null }
-        }
-        else {
-            WolframDecimal { repr: FloatRepr::Safe(value as f64) }
-        }
-    }
 }
 
 impl Eq for WolframDecimal {}
