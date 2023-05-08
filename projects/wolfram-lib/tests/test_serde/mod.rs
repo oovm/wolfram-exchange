@@ -13,6 +13,13 @@ pub struct UnitStruct {
     y: i32,
 }
 
+#[derive(serde_derive::Serialize, serde_derive::Deserialize)]
+pub enum UnitVariant {
+    Unit,
+    UnitTuple(i32, i32),
+    UnitStruct { x: i32, y: i32 },
+}
+
 #[test]
 fn fast_test() {
     let serializer = WolframSerializer::default();
@@ -26,16 +33,28 @@ fn fast_test() {
     assert_eq!(Unit.serialize(&serializer).unwrap(), WolframFunction::global("Unit", vec![]).to_wolfram());
     assert_eq!(
         UnitTuple(1, -1).serialize(&serializer).unwrap(),
-        WolframFunction::global("UnitTuple", vec![1.serialize(&serializer).unwrap(), (-1).serialize(&serializer).unwrap()]).to_wolfram()
+        WolframFunction::global("UnitTuple", vec![1.serialize(&serializer).unwrap(), (-1).serialize(&serializer).unwrap()]).to_wolfram(),
     );
     assert_eq!(
         UnitStruct { x: 0, y: 0 }.serialize(&serializer).unwrap(),
-        WolframFunction::global("UnitStruct", vec![WolframValue::pair("x", 0, false), WolframValue::pair("x", 0, false)]).to_wolfram()
+        WolframFunction::global("UnitStruct", vec![WolframValue::pair("x", 0, false), WolframValue::pair("y", 0, false)]).to_wolfram(),
+    );
+    assert_eq!(UnitVariant::Unit.serialize(&serializer).unwrap(), WolframFunction::namespace("UnitVariant", "Unit", vec![]).to_wolfram(),);
+    assert_eq!(
+        UnitVariant::UnitTuple(1, -1).serialize(&serializer).unwrap(),
+        WolframFunction::namespace("UnitVariant", "UnitTuple", vec![1.serialize(&serializer).unwrap(), (-1).serialize(&serializer).unwrap()])
+            .to_wolfram(),
+    );
+    assert_eq!(
+        UnitVariant::UnitStruct { x: 0, y: 0 }.serialize(&serializer).unwrap(),
+        WolframFunction::namespace("UnitVariant", "UnitStruct", vec![WolframValue::pair("x", 0, false), WolframValue::pair("y", 0, false)])
+            .to_wolfram(),
     );
 }
 
 #[test]
 fn test2() {
-    let f = WolframFunction::global("Unit", vec![]);
+    let serializer = WolframSerializer::default();
+    let f = Unit.serialize(&serializer).unwrap();
     println!("{:?}", f);
 }

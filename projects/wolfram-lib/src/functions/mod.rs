@@ -12,6 +12,18 @@ pub struct WolframSymbol {
 
 impl WolframSymbol {
     /// Creates a new [`WolframSymbol`] with the given name.
+    pub fn new<T, S>(namespace: T, name: S) -> Self
+    where
+        T: ToString,
+        S: ToString,
+    {
+        let namespace = namespace.to_string();
+        let name = name.to_string();
+        debug_assert!(Self::is_valid(namespace.as_ref()));
+        debug_assert!(Self::is_valid(name.as_ref()));
+        Self { namespace, name }
+    }
+    /// Creates a new [`WolframSymbol`] with the given name.
     pub fn global<S>(name: S) -> Self
     where
         S: ToString,
@@ -54,10 +66,10 @@ impl WolframFunction {
     ///
     pub fn namespace<S, I>(namespace: S, name: S, arguments: I) -> Self
     where
-        S: IntoIterator<Item = String>,
+        S: ToString,
         I: IntoIterator<Item = WolframValue>,
     {
-        todo!()
+        Self { head: WolframSymbol::new(namespace, name).to_wolfram(), rest: arguments.into_iter().collect() }
     }
     /// Creates a new [`WolframFunction`] with the given name and arguments.
     pub fn global<S, I>(name: S, arguments: I) -> Self

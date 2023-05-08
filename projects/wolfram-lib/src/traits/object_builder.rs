@@ -40,10 +40,10 @@ impl<'i> Serializer for &'i WolframSerializer {
     type SerializeSeq = SerializerToAny;
     type SerializeTuple = SerializerToAny;
     type SerializeTupleStruct = SerializeAsFunction<'i>;
-    type SerializeTupleVariant = SerializerToAny;
+    type SerializeTupleVariant = SerializeAsFunction<'i>;
     type SerializeMap = SerializerToAny;
     type SerializeStruct = SerializeAsFunction<'i>;
-    type SerializeStructVariant = SerializerToAny;
+    type SerializeStructVariant = SerializeAsFunction<'i>;
 
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
         Ok(WolframValue::Boolean(v))
@@ -117,11 +117,11 @@ impl<'i> Serializer for &'i WolframSerializer {
     }
 
     fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
-        Ok(WolframFunction::system(name, vec![]).to_wolfram())
+        Ok(WolframFunction::global(name, vec![]).to_wolfram())
     }
 
-    fn serialize_unit_variant(self, name: &'static str, variant_index: u32, variant: &'static str) -> Result<Self::Ok, Self::Error> {
-        todo!()
+    fn serialize_unit_variant(self, name: &'static str, _: u32, variant: &'static str) -> Result<Self::Ok, Self::Error> {
+        Ok(WolframFunction::namespace(name, variant, vec![]).to_wolfram())
     }
 
     fn serialize_newtype_struct<T: ?Sized>(self, name: &'static str, value: &T) -> Result<Self::Ok, Self::Error>
@@ -159,11 +159,11 @@ impl<'i> Serializer for &'i WolframSerializer {
     fn serialize_tuple_variant(
         self,
         name: &'static str,
-        variant_index: u32,
+        _: u32,
         variant: &'static str,
-        len: usize,
+        n: usize,
     ) -> Result<Self::SerializeTupleVariant, Self::Error> {
-        todo!()
+        Ok(SerializeAsFunction { name_space: name, name: variant, body: Vec::with_capacity(n), config: self })
     }
 
     fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
@@ -177,11 +177,11 @@ impl<'i> Serializer for &'i WolframSerializer {
     fn serialize_struct_variant(
         self,
         name: &'static str,
-        variant_index: u32,
+        _: u32,
         variant: &'static str,
-        len: usize,
+        n: usize,
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
-        todo!()
+        Ok(SerializeAsFunction { name_space: name, name: variant, body: Vec::with_capacity(n), config: self })
     }
     fn is_human_readable(&self) -> bool {
         false
@@ -266,7 +266,7 @@ impl<'i> SerializeTupleStruct for SerializeAsFunction<'i> {
     }
 }
 
-impl SerializeTupleVariant for SerializerToAny {
+impl<'i> SerializeTupleVariant for SerializeAsFunction<'i> {
     type Ok = WolframValue;
     type Error = WolframError;
 
@@ -274,11 +274,11 @@ impl SerializeTupleVariant for SerializerToAny {
     where
         T: Serialize,
     {
-        todo!()
+        SerializeTupleStruct::serialize_field(self, value)
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframFunction::namespace(self.name_space, self.name, self.body).to_wolfram())
     }
 }
 
@@ -302,7 +302,7 @@ impl<'i> SerializeStruct for SerializeAsFunction<'i> {
     }
 }
 
-impl SerializeStructVariant for SerializerToAny {
+impl<'i> SerializeStructVariant for SerializeAsFunction<'i> {
     type Ok = WolframValue;
     type Error = WolframError;
 
@@ -310,10 +310,10 @@ impl SerializeStructVariant for SerializerToAny {
     where
         T: Serialize,
     {
-        todo!()
+        SerializeStruct::serialize_field(self, key, value)
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(WolframFunction::namespace(self.name_space, self.name, self.body).to_wolfram())
     }
 }

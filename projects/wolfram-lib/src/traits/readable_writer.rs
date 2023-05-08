@@ -1,20 +1,34 @@
 use crate::{WolframFunction, WolframValue};
-use std::fmt::Write;
+use std::fmt::{Display, Formatter, Write};
 
+/// A serializer for the Wolfram Language.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ReadableWriter {
-    pub indent: usize,
+    /// Whether to pretty print the output.
+    pub pretty: bool,
+    /// The number of spaces to indent.
+    pub indent_string: &'static str,
+}
+
+impl Default for ReadableWriter {
+    fn default() -> Self {
+        Self { pretty: true, indent_string: "    " }
+    }
 }
 
 struct ReadableBuffer {
     buffer: String,
-    space_indent: usize,
+    indent_level: usize,
     config: ReadableWriter,
 }
 
 impl ReadableBuffer {
+    pub fn new(config: ReadableWriter) -> ReadableBuffer {
+        Self { buffer: String::new(), indent_level: 0, config }
+    }
     pub fn write_value(&mut self, value: &WolframValue) -> std::fmt::Result {
         match value {
-            WolframValue::Skip => write!(self.buffer, ""),
+            WolframValue::Skip => Ok(()),
             WolframValue::Function(v) => self.write_function(v),
             WolframValue::Boolean(v) => match v {
                 true => write!(self.buffer, "True"),
@@ -57,10 +71,35 @@ impl ReadableBuffer {
         self.dedent();
         Ok(())
     }
+    pub fn write_new_line(&mut self) -> std::fmt::Result {
+        self.buffer.write_char('\n')?;
+        if self.config.pretty {
+            for _ in 0..self.indent_level {
+                self.buffer.write_str(self.config.indent_string)?;
+            }
+        }
+        Ok(())
+    }
     pub fn indent(&mut self) {
-        self.space_indent += self.config.indent;
+        self.indent_level += 1;
     }
     pub fn dedent(&mut self) {
-        self.space_indent -= self.config.indent;
+        self.indent_level -= 1;
+    }
+}
+
+impl Display for WolframFunction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut buffer = ReadableBuffer::new(ReadableWriter { pretty: f.alternate(), indent_string: "    " });
+        buffer.write_function(self)?;
+        write!(f, "{}", buffer.buffer)
+    }
+}
+
+impl Display for WolframValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut buffer = ReadableBuffer::new(ReadableWriter { pretty: f.alternate(), indent_string: "    " });
+        buffer.write_value(self)?;
+        write!(f, "{}", buffer.buffer)
     }
 }
