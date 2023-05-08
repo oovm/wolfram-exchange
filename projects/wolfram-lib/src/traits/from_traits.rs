@@ -28,6 +28,11 @@ impl ToWolfram for char {
         unsafe { std::str::from_utf8_unchecked(&[*self as u8]).to_wolfram() }
     }
 }
+impl ToWolfram for bool {
+    fn to_wolfram(&self) -> WolframValue {
+        WolframValue::Boolean(*self)
+    }
+}
 
 impl ToWolfram for i8 {
     fn to_wolfram(&self) -> WolframValue {

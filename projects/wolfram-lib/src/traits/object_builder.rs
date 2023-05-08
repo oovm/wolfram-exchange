@@ -149,7 +149,7 @@ impl<'i> Serializer for &'i WolframSerializer {
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-        todo!()
+        Ok(SerializerAsList { body: Vec::with_capacity(len.unwrap_or(0)), config: self })
     }
 
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
@@ -198,22 +198,6 @@ impl<'i> Serializer for &'i WolframSerializer {
     }
 }
 
-impl<'i> SerializeSeq for SerializerAsList<'i> {
-    type Ok = WolframValue;
-    type Error = WolframError;
-
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
-    where
-        T: Serialize,
-    {
-        todo!()
-    }
-
-    fn end(self) -> Result<Self::Ok, Self::Error> {
-        todo!()
-    }
-}
-
 impl<'i> SerializeTuple for SerializerAsList<'i> {
     type Ok = WolframValue;
     type Error = WolframError;
@@ -229,6 +213,21 @@ impl<'i> SerializeTuple for SerializerAsList<'i> {
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
         Ok(WolframValue::list(self.body))
+    }
+}
+impl<'i> SerializeSeq for SerializerAsList<'i> {
+    type Ok = WolframValue;
+    type Error = WolframError;
+
+    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    where
+        T: Serialize,
+    {
+        SerializeTuple::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<Self::Ok, Self::Error> {
+        SerializeTuple::end(self)
     }
 }
 

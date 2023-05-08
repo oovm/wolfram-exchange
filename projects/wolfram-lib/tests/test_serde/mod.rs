@@ -37,8 +37,18 @@ fn fast_test() {
 #[test]
 fn fast_container() {
     let serializer = WolframSerializer::default();
-    assert_eq!([true, false].serialize(&serializer).unwrap(), WolframValue::list(vec![true, false]));
+
     assert_eq!((false, true).serialize(&serializer).unwrap(), WolframValue::list(vec![false, true]));
+    assert_eq!([true, false].serialize(&serializer).unwrap(), WolframValue::list(vec![true, false]));
+    assert_eq!(vec![true, false].serialize(&serializer).unwrap(), WolframValue::list(vec![true, false]));
+    let mut hash_set = std::collections::HashSet::new();
+    hash_set.insert(true);
+    hash_set.insert(false);
+    assert_eq!(hash_set.serialize(&serializer).unwrap(), WolframValue::list(vec![false, true]));
+    let mut hash_map = std::collections::HashMap::new();
+    hash_map.insert(true, true);
+    hash_map.insert(false, false);
+    assert_eq!(hash_map.serialize(&serializer).unwrap(), WolframValue::list(vec![true, false]));
 }
 
 #[test]
