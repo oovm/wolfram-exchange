@@ -1,7 +1,7 @@
 mod builders;
 mod encoding;
 
-use crate::{ToWolfram, WolframValue};
+use crate::{ToWolfram, WolframFunction, WolframValue};
 pub use builders::*;
 
 use num::BigInt;
@@ -26,18 +26,16 @@ impl WolframValue {
     where
         T: ToWolfram,
     {
-        let head = WolframValue::symbol(head);
-        let v = args.into_iter().map(|x| x.to_wolfram()).collect();
-        WolframValue::Function(Box::new(head), v)
+        let v = args.into_iter().map(|x| x.to_wolfram());
+        WolframFunction::system(head, v).to_wolfram()
     }
     /// Creates a [List] from sequence of elements
     pub fn list<T>(items: Vec<T>) -> WolframValue
     where
         T: ToWolfram,
     {
-        let head = WolframValue::symbol("List");
-        let v = items.into_iter().map(|x| x.to_wolfram()).collect();
-        WolframValue::Function(Box::new(head), v)
+        let v = items.into_iter().map(|x| x.to_wolfram());
+        WolframFunction::system("List", v).to_wolfram()
     }
     /// Creates a [NumericArray]
     pub fn numeric_array() {

@@ -3,11 +3,10 @@
     "private": true,
     "scripts": {
         "cli": "cargo run --color=always --package wxf-converter --bin wxf-converter -- -h",
-        "build": "cargo build --release",
+        "u": "cargo upgrade --offline --incompatible",
         "test": "cargo test --release",
         "fmt": "cargo fmt --all",
         "push": "yarn test && git push",
-        "reset": "git reset Head~ --soft",
-        "u": "cargo upgrade --workspace"
+        "reset": "git reset Head~ --soft"
     }
 }

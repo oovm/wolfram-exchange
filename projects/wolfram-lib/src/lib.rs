@@ -10,12 +10,14 @@ use std::collections::BTreeMap;
 
 mod error;
 mod extensions;
+mod functions;
 mod traits;
 mod utils;
 
-pub use self::{
+pub use crate::{
     error::{Result, WolframError},
     extensions::*,
+    functions::WolframFunction,
     utils::*,
 };
 
@@ -40,11 +42,13 @@ pub trait ToWolfram {
 /// A [`WolframValue`] is a value that can be converted to a [`WolframValue`]
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub enum WolframValue {
-    /// A [`WolframBool`] value.
+    /// A Empty value, roughly equivalent to `Nothing` in Wolfram Language
     Skip,
     /// Function with name, args
-    Function(Box<WolframValue>, Vec<WolframValue>),
-    /// A [`WolframBool`] value.
+    Function(Box<WolframFunction>),
+    /// A boolean value in Rust side, notice that `True` and `False` are symbols in Wolfram Language
+    Boolean(bool),
+    /// A wolfram string
     String(String),
     /// A [`WolframBool`] value.
     Bytes(Vec<u8>),

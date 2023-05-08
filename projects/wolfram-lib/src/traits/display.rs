@@ -1,4 +1,5 @@
 use super::*;
+use crate::{ToWolfram, WolframFunction};
 
 impl Display for WolframValue {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
@@ -7,22 +8,30 @@ impl Display for WolframValue {
     }
 }
 
+impl WolframFunction {
+    fn fmt_indent(&self, f: &mut Formatter, indent: &mut usize) -> std::fmt::Result {
+        let head = self.get_head();
+        let args = self.get_rest();
+        let v: Vec<String> = args.iter().map(|v| v.to_string()).collect();
+        *indent += 4;
+        if head.to_string() == "List" {
+            write!(f, "{{{}}}", v.join(","))?
+        }
+        else {
+            write!(f, "{}[{}]", head.to_string(), v.join(","))?
+        }
+        *indent -= 4;
+        Ok(())
+    }
+}
+
 impl WolframValue {
     fn fmt_indent(&self, f: &mut Formatter, indent: &mut usize) -> std::fmt::Result {
         match self {
             WolframValue::Skip => write!(f, ""),
-            WolframValue::Function(head, args) => {
-                let v: Vec<String> = args.iter().map(|v| v.to_string()).collect();
-                *indent += 4;
-                if head.to_string() == "List" {
-                    write!(f, "{{{}}}", v.join(","))?
-                }
-                else {
-                    write!(f, "{}[{}]", head.to_string(), v.join(","))?
-                }
-                *indent -= 4;
-                Ok(())
-            }
+            WolframValue::Function(v) => v.fmt_indent(f, indent),
+            WolframValue::Boolean(v) => v.to_wolfram().fmt_indent(f, indent),
+
             WolframValue::String(s) => write!(f, "{:?}", s),
             WolframValue::Bytes(b) => {
                 let v: Vec<String> = b.iter().map(|s| format!("{}", s)).collect();

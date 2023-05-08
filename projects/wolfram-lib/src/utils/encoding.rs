@@ -1,4 +1,4 @@
-use crate::{WolframValue, SYSTEM_SYMBOLS};
+use crate::{SYSTEM_SYMBOLS, ToWolfram, WolframFunction, WolframValue};
 use flate2::{write::ZlibEncoder, Compression};
 use integer_encoding::VarInt;
 use std::{collections::BTreeSet, io::Write, mem::transmute};
@@ -37,13 +37,11 @@ impl WolframValue {
     pub fn write_bytes(&self, out: &mut Vec<u8>) {
         match self {
             WolframValue::Skip => (),
-            WolframValue::Function(head, args) => {
-                out.push(b'f');
-                out.extend_from_slice(&args.len().encode_var_vec());
-                head.write_bytes(out);
-                for v in args {
-                    v.write_bytes(out)
-                }
+            WolframValue::Function(v) => {
+                v.write_bytes_inner(out)
+            }
+            WolframValue::Boolean(v) => {
+                v.to_wolfram().write_bytes(out)
             }
             WolframValue::String(s) => {
                 let len = s.len().encode_var_vec();
@@ -109,6 +107,17 @@ impl WolframValue {
             }
             WolframValue::Rule => out.push(b'-'),
             WolframValue::RuleDelayed => out.push(b':'),
+        }
+    }
+}
+
+impl WolframFunction {
+    fn write_bytes_inner(&self, out: &mut Vec<u8>) {
+        out.push(b'f');
+        out.extend_from_slice(&self.get_rest().len().encode_var_vec());
+        self.get_head().write_bytes(out);
+        for v in self.get_rest() {
+            v.write_bytes(out)
         }
     }
 }

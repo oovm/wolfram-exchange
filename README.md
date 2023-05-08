@@ -21,6 +21,7 @@ WolframValue consists of the following legal elements:
 ```rust
 pub enum WolframValue {
     /// Function with name, args
+    Boolean(bool),
     Function(Box<str>, Vec<WolframValue>),
     String(Box<str>),
     Bytes(Vec<u8>),
